@@ -1,2 +1,6 @@
 # test file
 test.dart
+
+# git file
+.gitignore
+.git
