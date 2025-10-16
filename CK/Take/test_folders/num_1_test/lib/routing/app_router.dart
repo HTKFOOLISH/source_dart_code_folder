@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:num_1_test/ui/room_page/living_room/widgets/living_room.dart';
 import '../ui/home_screen/widgets/home_screen.dart';
 import '../ui/login/widgets/login_screen.dart';
 import 'app_routes.dart';
@@ -16,6 +17,8 @@ Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     // return MaterialPageRoute(builder: (_) => DeviceScreen());
     // case AppRoutes.configDevice:
     //   return MaterialPageRoute(builder: (_) => ConfigDeviceScreen());
+    case AppRoutes.livingRoom:
+      return MaterialPageRoute(builder: (_) => LivingRoom());
   }
   return null;
 }

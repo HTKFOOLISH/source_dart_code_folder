@@ -36,9 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // TODO: Trỏ tới trang home_screen (all room)
       // Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => true);
+      Navigator.of(context).popAndPushNamed(AppRoutes.home);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -82,15 +80,8 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: const [
-                  Image(
-                    image: AssetImage('assets/images/bug.png'),
-                    height: 100,
-                    width: 100,
-                  ),
-                  Image(
-                    image: AssetImage('assets/images/smart-house.png'),
-                    height: 250,
-                  ),
+                  Image(image: AssetImage('assets/images/bug.png')),
+                  Image(image: AssetImage('assets/images/smart-house.png')),
                 ],
               ),
 
@@ -114,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(
                     enabledBorder: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(30)),
-                      borderSide: BorderSide(color: Colors.black87, width: 3),
+                      borderSide: BorderSide(color: Colors.white, width: 3),
                     ),
                     focusedBorder: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(30)),
@@ -132,13 +123,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderSide: BorderSide(color: Colors.red, width: 3),
                     ),
                     labelText: labelTextUsername,
+                    labelStyle: TextStyle(color: Colors.white),
                     floatingLabelStyle: const TextStyle(
-                      color: Colors.black87,
+                      color: Colors.white,
                       fontSize: 24,
                     ),
                     hintText: 'Enter your username',
                     hintStyle: const TextStyle(
-                      color: Colors.grey,
+                      color: Colors.white70,
                       fontSize: 20,
                     ),
                     // Hiển thị lỗi CHỈ sau khi đã bấm Sign In
@@ -150,12 +142,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: Colors.red,
                       fontSize: 16,
                     ),
-                    prefixIcon: const Icon(Icons.person_outlined),
+                    prefixIcon: const Icon(
+                      Icons.person_outlined,
+                      color: Colors.white,
+                    ),
                     suffixIcon: FocusScope(
                       canRequestFocus: false,
                       child: IconButton(
                         onPressed: () => _usernameController.clear(),
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(Icons.clear, color: Colors.white),
                       ),
                     ),
                   ),
@@ -173,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(
                     enabledBorder: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(30)),
-                      borderSide: BorderSide(color: Colors.black87, width: 3),
+                      borderSide: BorderSide(color: Colors.white, width: 3),
                     ),
                     focusedBorder: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(30)),
@@ -191,13 +186,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderSide: BorderSide(color: Colors.red, width: 3),
                     ),
                     labelText: labelTextPassword,
+                    labelStyle: TextStyle(color: Colors.white),
                     floatingLabelStyle: const TextStyle(
-                      color: Colors.black87,
+                      color: Colors.white,
                       fontSize: 24,
                     ),
                     hintText: 'Enter your password',
                     hintStyle: const TextStyle(
-                      color: Colors.grey,
+                      color: Colors.white,
                       fontSize: 20,
                     ),
                     // Lỗi chỉ hiện sau khi đã bấm Sign In
@@ -208,7 +204,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: Colors.red,
                       fontSize: 16,
                     ),
-                    prefixIcon: const Icon(Icons.lock_outline),
+                    prefixIcon: const Icon(
+                      Icons.lock_outline,
+                      color: Colors.white,
+                    ),
                     suffixIcon: FocusScope(
                       canRequestFocus: false,
                       child: IconButton(
@@ -218,6 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           _isObscure
                               ? Icons.visibility_off_outlined
                               : Icons.visibility_outlined,
+                          color: Colors.white,
                         ),
                       ),
                     ),

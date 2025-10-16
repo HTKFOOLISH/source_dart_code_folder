@@ -20,21 +20,37 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF303030), // màu nền
+          foregroundColor: Colors.white, // màu chữ và icon
+          elevation: 0,
+          centerTitle: true, // căn giữa tiêu đề
+          toolbarHeight: 80, // độ cao
+          titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+        ),
         fontFamily: 'Poppins',
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blueGrey,
           brightness: Brightness.light,
         ),
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(
-            fontSize: 72,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          titleLarge: TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+        scaffoldBackgroundColor: Color(0xFF303030),
+        textTheme: ThemeData.light().textTheme.apply(
+          bodyColor: Colors.white,
+          displayColor: Colors.white,
+          decorationColor: Colors.white,
+        ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          extendedPadding: EdgeInsetsGeometry.all(17),
+          backgroundColor: Color(0xFF303030),
+          foregroundColor: Colors.white,
+          hoverColor: Colors.blue,
+          hoverElevation: 50,
+          elevation: 0,
+          focusColor: Colors.white70,
+          focusElevation: 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(21),
+            side: BorderSide(color: Colors.white, width: 3),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
@@ -43,7 +59,16 @@ class MyApp extends StatelessWidget {
             foregroundColor: colorScheme.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(45),
+              side: BorderSide(color: Colors.white, width: 3),
             ),
+          ),
+        ),
+        listTileTheme: ListTileThemeData(
+          tileColor: Colors.black,
+          textColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+            side: BorderSide(color: Colors.white60, width: 3),
           ),
         ),
       ),
