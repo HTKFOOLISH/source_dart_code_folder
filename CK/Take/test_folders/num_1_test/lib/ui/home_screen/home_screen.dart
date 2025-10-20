@@ -97,52 +97,55 @@ class HomeScreen extends StatelessWidget {
             ),
 
             // Bed Room
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(20)),
-                side: BorderSide(color: Colors.white60, width: 3),
-              ),
-              color: Colors.black,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Padding(padding: EdgeInsets.all(15)),
-                  Image.asset('assets/images/bed_room.png'),
-                  Padding(
-                    padding: EdgeInsets.all(0),
-                    child: const Text(
-                      'Bed Room',
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.white70,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Text(
-                        'Devices: 4', // 4 là số lượng thiết bị hiện có
+            InkWell(
+              onTap: () => Navigator.pushNamed(context, AppRoutes.livingRoom),
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  side: BorderSide(color: Colors.white60, width: 3),
+                ),
+                color: Colors.black,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Padding(padding: EdgeInsets.all(15)),
+                    Image.asset('assets/images/bed_room.png'),
+                    Padding(
+                      padding: EdgeInsets.all(0),
+                      child: const Text(
+                        'Bed Room',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 20,
                           color: Colors.white70,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(
-                        'Deactivate', // tắt đèn thì chuyển màu và ngc lại
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.red, // đổi màu để tắt hết đèn
-                          fontWeight: FontWeight.bold,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Text(
+                          'Devices: 4', // 4 là số lượng thiết bị hiện có
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white70,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  Padding(padding: EdgeInsets.all(5)),
-                ],
+                        Text(
+                          'Deactivate', // tắt đèn thì chuyển màu và ngc lại
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.red, // đổi màu để tắt hết đèn
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Padding(padding: EdgeInsets.all(5)),
+                  ],
+                ),
               ),
             ),
 

@@ -151,6 +151,7 @@ class DeviceInfo extends StatefulWidget {
 
 class _DeviceInfoState extends State<DeviceInfo> {
   int get _count => widget.indexCounter;
+  // bool isOn => widget.
 
   @override
   Widget build(BuildContext context) {
