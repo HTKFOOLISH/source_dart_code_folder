@@ -96,16 +96,23 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
                 itemBuilder: (context, index) {
                   final device = viewModel.device[index];
                   return InkWell(
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
                     onTap: () {
                       setState(() {
                         count = index;
                         isOnTap = true;
                       });
                     },
+
                     child: Card(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(20)),
-                        side: BorderSide(color: Colors.white60, width: 3),
+                        side: BorderSide(
+                          color: (count == index)
+                              ? Colors.blue
+                              : Colors.white60,
+                          width: (count == index) ? 5 : 3,
+                        ),
                       ),
                       child: ListTile(
                         leading: Image.asset(
@@ -151,21 +158,21 @@ class DeviceInfo extends StatefulWidget {
 
 class _DeviceInfoState extends State<DeviceInfo> {
   int get _count => widget.indexCounter;
-  // bool isOn => widget.
 
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DevicesViewModel>(context);
+    String icon = (viewModel.device[_count].isOn)
+        ? "${viewModel.device[_count].pathImageName}_on.gif"
+        : "${viewModel.device[_count].pathImageName}.png";
+
     return Expanded(
       flex: 2,
       child: Column(
         children: [
           Expanded(
             flex: 2,
-            child: Image.asset(
-              'assets/images/${viewModel.device[_count].pathImageName}.png',
-              scale: .5,
-            ),
+            child: Image.asset('assets/images/$icon' /* , scale: .5 */),
           ),
           Expanded(
             child: Text(
@@ -191,7 +198,7 @@ class _DeviceInfoState extends State<DeviceInfo> {
                 Expanded(
                   flex: 1,
                   child: Center(
-                    child: Text('Current: ${viewModel.device[_count].current}'),
+                    child: Text('Power: ${viewModel.device[_count].power}'),
                   ),
                 ),
               ],
