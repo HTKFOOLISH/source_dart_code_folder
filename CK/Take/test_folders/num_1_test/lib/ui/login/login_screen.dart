@@ -36,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // TODO: Trỏ tới trang home_screen (all room)
       // Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-      Navigator.of(context).popAndPushNamed(AppRoutes.home);
+      Navigator.pushNamed(context, AppRoutes.home);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
