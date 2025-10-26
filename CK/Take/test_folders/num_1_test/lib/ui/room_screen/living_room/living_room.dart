@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:num_1_test/ui/room_page/devices_view_model.dart';
+import 'package:num_1_test/ui/devices_screen/devices_view_model.dart';
 
 class LivingRoom extends StatefulWidget {
   const LivingRoom({super.key});

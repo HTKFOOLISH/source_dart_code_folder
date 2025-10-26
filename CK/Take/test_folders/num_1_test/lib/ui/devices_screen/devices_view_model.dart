@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:num_1_test/ui/room_page/devices_model.dart';
+import 'package:num_1_test/ui/devices_screen/devices_model.dart';
 
 class DevicesViewModel extends ChangeNotifier {
   // List các thiết bị tạo sẵn
