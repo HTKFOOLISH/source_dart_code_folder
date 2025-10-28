@@ -1,0 +1,1756 @@
+Index: lib/ui/login/login_screen.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import 'package:flutter/material.dart';\r\nimport '../../routing/app_routes.dart';\r\n\r\nclass LoginScreen extends StatefulWidget {\r\n  const LoginScreen({super.key});\r\n\r\n  @override\r\n  State<StatefulWidget> createState() => _LoginScreenState();\r\n}\r\n\r\nclass _LoginScreenState extends State<LoginScreen> {\r\n  final _usernameController = TextEditingController();\r\n  final _passwordController = TextEditingController();\r\n\r\n  final _usernameFocus = FocusNode();\r\n  final _passwordFocus = FocusNode();\r\n\r\n  bool _isObscure = true;\r\n\r\n  static const String labelTextUsername = 'Username';\r\n  static const String labelTextPassword = 'Password';\r\n\r\n  // Cờ cho biết đã bấm Sign In lần đầu hay chưa\r\n  bool _submitted = false;\r\n\r\n  void _handleSubmit() async {\r\n    setState(() {\r\n      _submitted = true; // từ giờ trở đi mới hiện lỗi nếu trống\r\n    });\r\n\r\n    final userEmpty = _usernameController.text.trim().isEmpty;\r\n    final passEmpty = _passwordController.text.isEmpty;\r\n\r\n    if (!userEmpty && !passEmpty) {\r\n      await Future.delayed(const Duration(milliseconds: 500));\r\n\r\n      // TODO: Trỏ tới trang home_screen (all room)\r\n      // Navigator.of(context).pushReplacementNamed(AppRoutes.home);\r\n      Navigator.of(context).popAndPushNamed(AppRoutes.home);\r\n\r\n      ScaffoldMessenger.of(context).showSnackBar(\r\n        const SnackBar(\r\n          content: Text('Login Successful!'),\r\n          duration: Duration(seconds: 2),\r\n        ),\r\n      );\r\n      // TODO: gọi API đăng nhập thật sự ở đây\r\n    } else {\r\n      // Đưa focus tới ô sai đầu tiên cho tiện nhập\r\n      if (userEmpty) {\r\n        _usernameFocus.requestFocus();\r\n      } else if (passEmpty) {\r\n        _passwordFocus.requestFocus();\r\n      }\r\n    }\r\n  }\r\n\r\n  @override\r\n  void dispose() {\r\n    _usernameController.dispose();\r\n    _passwordController.dispose();\r\n    _usernameFocus.dispose();\r\n    _passwordFocus.dispose();\r\n    super.dispose();\r\n  }\r\n\r\n  // static const String labelTextUsername = 'Username';\r\n  // static const String labelTextPassword = 'Password';\r\n  // final LoginViewModel loginViewModel = LoginViewModel();\r\n\r\n  @override\r\n  Widget build(BuildContext context) {\r\n    return Scaffold(\r\n      body: SafeArea(\r\n        child: SingleChildScrollView(\r\n          child: Column(\r\n            mainAxisAlignment: MainAxisAlignment.center,\r\n            children: [\r\n              // LOGO\r\n              Row(\r\n                mainAxisAlignment: MainAxisAlignment.spaceAround,\r\n                children: const [\r\n                  Image(image: AssetImage('assets/images/bug.png')),\r\n                  Image(image: AssetImage('assets/images/smart-house.png')),\r\n                ],\r\n              ),\r\n\r\n              // TITLE\r\n              const Text(\r\n                'BUG HOME',\r\n                style: TextStyle(\r\n                  fontSize: 72,\r\n                  fontWeight: FontWeight.bold,\r\n                  height: 3.0,\r\n                ),\r\n              ),\r\n\r\n              // USERNAME\r\n              SizedBox(\r\n                width: 350,\r\n                height: 100, // tăng nhẹ để đủ chỗ hiển thị error\r\n                child: TextField(\r\n                  focusNode: _usernameFocus,\r\n                  controller: _usernameController,\r\n                  decoration: InputDecoration(\r\n                    enabledBorder: const OutlineInputBorder(\r\n                      borderRadius: BorderRadius.all(Radius.circular(30)),\r\n                      borderSide: BorderSide(color: Colors.white, width: 3),\r\n                    ),\r\n                    focusedBorder: const OutlineInputBorder(\r\n                      borderRadius: BorderRadius.all(Radius.circular(30)),\r\n                      borderSide: BorderSide(\r\n                        color: Colors.lightGreen,\r\n                        width: 3,\r\n                      ),\r\n                    ),\r\n                    focusedErrorBorder: const OutlineInputBorder(\r\n                      borderRadius: BorderRadius.all(Radius.circular(30)),\r\n                      borderSide: BorderSide(color: Colors.red, width: 3),\r\n                    ),\r\n                    errorBorder: const OutlineInputBorder(\r\n                      borderRadius: BorderRadius.all(Radius.circular(30)),\r\n                      borderSide: BorderSide(color: Colors.red, width: 3),\r\n                    ),\r\n                    labelText: labelTextUsername,\r\n                    labelStyle: TextStyle(color: Colors.white),\r\n                    floatingLabelStyle: const TextStyle(\r\n                      color: Colors.white,\r\n                      fontSize: 24,\r\n                    ),\r\n                    hintText: 'Enter your username',\r\n                    hintStyle: const TextStyle(\r\n                      color: Colors.white70,\r\n                      fontSize: 20,\r\n                    ),\r\n                    // Hiển thị lỗi CHỈ sau khi đã bấm Sign In\r\n                    errorText:\r\n                        _submitted && _usernameController.text.trim().isEmpty\r\n                        ? 'Username cannot be empty'\r\n                        : null,\r\n                    errorStyle: const TextStyle(\r\n                      color: Colors.red,\r\n                      fontSize: 16,\r\n                    ),\r\n                    prefixIcon: const Icon(\r\n                      Icons.person_outlined,\r\n                      color: Colors.white,\r\n                    ),\r\n                    suffixIcon: FocusScope(\r\n                      canRequestFocus: false,\r\n                      child: IconButton(\r\n                        onPressed: () => _usernameController.clear(),\r\n                        icon: const Icon(Icons.clear, color: Colors.white),\r\n                      ),\r\n                    ),\r\n                  ),\r\n                  textInputAction: TextInputAction.next,\r\n                ),\r\n              ),\r\n\r\n              // PASSWORD\r\n              SizedBox(\r\n                width: 350,\r\n                height: 100,\r\n                child: TextField(\r\n                  focusNode: _passwordFocus,\r\n                  controller: _passwordController,\r\n                  decoration: InputDecoration(\r\n                    enabledBorder: const OutlineInputBorder(\r\n                      borderRadius: BorderRadius.all(Radius.circular(30)),\r\n                      borderSide: BorderSide(color: Colors.white, width: 3),\r\n                    ),\r\n                    focusedBorder: const OutlineInputBorder(\r\n                      borderRadius: BorderRadius.all(Radius.circular(30)),\r\n                      borderSide: BorderSide(\r\n                        color: Colors.lightGreen,\r\n                        width: 3,\r\n                      ),\r\n                    ),\r\n                    focusedErrorBorder: const OutlineInputBorder(\r\n                      borderRadius: BorderRadius.all(Radius.circular(30)),\r\n                      borderSide: BorderSide(color: Colors.red, width: 3),\r\n                    ),\r\n                    errorBorder: const OutlineInputBorder(\r\n                      borderRadius: BorderRadius.all(Radius.circular(30)),\r\n                      borderSide: BorderSide(color: Colors.red, width: 3),\r\n                    ),\r\n                    labelText: labelTextPassword,\r\n                    labelStyle: TextStyle(color: Colors.white),\r\n                    floatingLabelStyle: const TextStyle(\r\n                      color: Colors.white,\r\n                      fontSize: 24,\r\n                    ),\r\n                    hintText: 'Enter your password',\r\n                    hintStyle: const TextStyle(\r\n                      color: Colors.white,\r\n                      fontSize: 20,\r\n                    ),\r\n                    // Lỗi chỉ hiện sau khi đã bấm Sign In\r\n                    errorText: _submitted && _passwordController.text.isEmpty\r\n                        ? 'Password cannot be empty'\r\n                        : null,\r\n                    errorStyle: const TextStyle(\r\n                      color: Colors.red,\r\n                      fontSize: 16,\r\n                    ),\r\n                    prefixIcon: const Icon(\r\n                      Icons.lock_outline,\r\n                      color: Colors.white,\r\n                    ),\r\n                    suffixIcon: FocusScope(\r\n                      canRequestFocus: false,\r\n                      child: IconButton(\r\n                        onPressed: () =>\r\n                            setState(() => _isObscure = !_isObscure),\r\n                        icon: Icon(\r\n                          _isObscure\r\n                              ? Icons.visibility_off_outlined\r\n                              : Icons.visibility_outlined,\r\n                          color: Colors.white,\r\n                        ),\r\n                      ),\r\n                    ),\r\n                  ),\r\n                  obscureText: _isObscure,\r\n                  obscuringCharacter: '*',\r\n                  textInputAction: TextInputAction.done,\r\n                ),\r\n              ),\r\n\r\n              // SIGN IN BUTTON (luôn bấm được)\r\n              SizedBox(\r\n                height: 90,\r\n                width: 350,\r\n                child: ElevatedButton(\r\n                  onPressed: () => _handleSubmit(), // GỌI hàm thật sự\r\n                  child: const Text(\r\n                    'Sign In',\r\n                    style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),\r\n                  ),\r\n                ),\r\n              ),\r\n            ],\r\n          ),\r\n        ),\r\n      ),\r\n    );\r\n  }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/ui/login/login_screen.dart b/lib/ui/login/login_screen.dart
+--- a/lib/ui/login/login_screen.dart	(revision a5ea87507a6252b7e0348c5da0315b01f589ce82)
++++ b/lib/ui/login/login_screen.dart	(date 1761662176734)
+@@ -36,7 +36,7 @@
+ 
+       // TODO: Trỏ tới trang home_screen (all room)
+       // Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+-      Navigator.of(context).popAndPushNamed(AppRoutes.home);
++      Navigator.pushNamed(context, AppRoutes.home);
+ 
+       ScaffoldMessenger.of(context).showSnackBar(
+         const SnackBar(
+Index: lib/ui/home_screen/home_screen.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import 'package:flutter/material.dart';\r\nimport 'package:num_1_test/routing/app_routes.dart';\r\n\r\nclass HomeScreen extends StatelessWidget {\r\n  const HomeScreen({super.key});\r\n\r\n  @override\r\n  Widget build(BuildContext context) {\r\n    return Scaffold(\r\n      resizeToAvoidBottomInset: true,\r\n      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,\r\n      floatingActionButton: FloatingActionButton.extended(\r\n        tooltip: 'add a new room',\r\n        onPressed: () {},\r\n        label: Row(\r\n          children: [\r\n            Icon(Icons.add, color: Colors.white),\r\n            Padding(padding: EdgeInsets.fromLTRB(0, 0, 7, 0)),\r\n            Text('Add room'),\r\n          ],\r\n        ),\r\n      ),\r\n      appBar: AppBar(\r\n        title: const Text('All Rooms'),\r\n        leading: BackButton(\r\n          onPressed: () => {\r\n            Navigator.of(context).popAndPushNamed(AppRoutes.login),\r\n            ScaffoldMessenger.of(context).showSnackBar(\r\n              SnackBar(\r\n                content: const Text('You\\'ve just logout'),\r\n                duration: Duration(seconds: 2),\r\n              ),\r\n            ),\r\n          },\r\n        ),\r\n      ),\r\n      body: Padding(\r\n        padding: const EdgeInsets.fromLTRB(12, 50, 12, 50),\r\n        child: GridView.count(\r\n          childAspectRatio: .90, // chỉnh tỉ lệ chiều cao từng thẻ\r\n          crossAxisCount: 2, // 2 cột\r\n          crossAxisSpacing: 5, // khoảng cách dọc\r\n          mainAxisSpacing: 16, // khoảng cách ngang\r\n          // Chứa các phòng\r\n          children: [\r\n            // Living Room\r\n            InkWell(\r\n              onTap: () => Navigator.pushNamed(context, AppRoutes.livingRoom),\r\n              child: Card(\r\n                shape: RoundedRectangleBorder(\r\n                  borderRadius: BorderRadius.all(Radius.circular(20)),\r\n                  side: BorderSide(color: Colors.white60, width: 3),\r\n                ),\r\n                color: Colors.black,\r\n                child: Column(\r\n                  mainAxisAlignment: MainAxisAlignment.spaceBetween,\r\n                  crossAxisAlignment: CrossAxisAlignment.center,\r\n                  children: [\r\n                    // Padding(padding: EdgeInsets.all(15)),\r\n                    Image.asset('assets/images/Living_room.png'),\r\n                    Padding(\r\n                      padding: EdgeInsets.all(0),\r\n                      child: const Text(\r\n                        'Living Room',\r\n                        style: TextStyle(\r\n                          fontSize: 20,\r\n                          color: Colors.white70,\r\n                          fontWeight: FontWeight.bold,\r\n                        ),\r\n                      ),\r\n                    ),\r\n                    Row(\r\n                      mainAxisAlignment: MainAxisAlignment.spaceAround,\r\n                      children: [\r\n                        Text(\r\n                          'Devices: 4', // 4 là số lượng thiết bị hiện có\r\n                          style: TextStyle(\r\n                            fontSize: 16,\r\n                            color: Colors.white70,\r\n                            fontWeight: FontWeight.bold,\r\n                          ),\r\n                        ),\r\n                        Text(\r\n                          'Deactivate', // tắt đèn thì chuyển màu và ngc lại\r\n                          style: TextStyle(\r\n                            fontSize: 16,\r\n                            color: Colors.red, // đổi màu để tắt hết đèn\r\n                            fontWeight: FontWeight.bold,\r\n                          ),\r\n                        ),\r\n                      ],\r\n                    ),\r\n                    Padding(padding: EdgeInsets.all(5)),\r\n                  ],\r\n                ),\r\n              ),\r\n            ),\r\n\r\n            // Bed Room\r\n            InkWell(\r\n              onTap: () => Navigator.pushNamed(context, AppRoutes.livingRoom),\r\n              child: Card(\r\n                shape: RoundedRectangleBorder(\r\n                  borderRadius: BorderRadius.all(Radius.circular(20)),\r\n                  side: BorderSide(color: Colors.white60, width: 3),\r\n                ),\r\n                color: Colors.black,\r\n                child: Column(\r\n                  mainAxisAlignment: MainAxisAlignment.spaceBetween,\r\n                  crossAxisAlignment: CrossAxisAlignment.center,\r\n                  children: [\r\n                    // Padding(padding: EdgeInsets.all(15)),\r\n                    Image.asset('assets/images/bed_room.png'),\r\n                    Padding(\r\n                      padding: EdgeInsets.all(0),\r\n                      child: const Text(\r\n                        'Bed Room',\r\n                        style: TextStyle(\r\n                          fontSize: 20,\r\n                          color: Colors.white70,\r\n                          fontWeight: FontWeight.bold,\r\n                        ),\r\n                      ),\r\n                    ),\r\n                    Row(\r\n                      mainAxisAlignment: MainAxisAlignment.spaceAround,\r\n                      children: [\r\n                        Text(\r\n                          'Devices: 4', // 4 là số lượng thiết bị hiện có\r\n                          style: TextStyle(\r\n                            fontSize: 16,\r\n                            color: Colors.white70,\r\n                            fontWeight: FontWeight.bold,\r\n                          ),\r\n                        ),\r\n                        Text(\r\n                          'Deactivate', // tắt đèn thì chuyển màu và ngc lại\r\n                          style: TextStyle(\r\n                            fontSize: 16,\r\n                            color: Colors.red, // đổi màu để tắt hết đèn\r\n                            fontWeight: FontWeight.bold,\r\n                          ),\r\n                        ),\r\n                      ],\r\n                    ),\r\n                    Padding(padding: EdgeInsets.all(5)),\r\n                  ],\r\n                ),\r\n              ),\r\n            ),\r\n\r\n            // Kitchen\r\n            Card(\r\n              shape: RoundedRectangleBorder(\r\n                borderRadius: BorderRadius.all(Radius.circular(20)),\r\n                side: BorderSide(color: Colors.white60, width: 3),\r\n              ),\r\n              color: Colors.black,\r\n              child: Column(\r\n                mainAxisAlignment: MainAxisAlignment.spaceBetween,\r\n                crossAxisAlignment: CrossAxisAlignment.center,\r\n                children: [\r\n                  // Padding(padding: EdgeInsets.all(15)),\r\n                  Image.asset('assets/images/kitchen.png'),\r\n                  Padding(\r\n                    padding: EdgeInsets.all(0),\r\n                    child: const Text(\r\n                      'Kitchen',\r\n                      style: TextStyle(\r\n                        fontSize: 20,\r\n                        color: Colors.white70,\r\n                        fontWeight: FontWeight.bold,\r\n                      ),\r\n                    ),\r\n                  ),\r\n                  Row(\r\n                    mainAxisAlignment: MainAxisAlignment.spaceAround,\r\n                    children: [\r\n                      Text(\r\n                        'Devices: 4', // 4 là số lượng thiết bị hiện có\r\n                        style: TextStyle(\r\n                          fontSize: 16,\r\n                          color: Colors.white70,\r\n                          fontWeight: FontWeight.bold,\r\n                        ),\r\n                      ),\r\n                      Text(\r\n                        'Activate', // tắt đèn thì chuyển màu và ngc lại\r\n                        style: TextStyle(\r\n                          fontSize: 16,\r\n                          color: Colors.green, // đổi màu để tắt hết đèn\r\n                          fontWeight: FontWeight.bold,\r\n                        ),\r\n                      ),\r\n                    ],\r\n                  ),\r\n                  Padding(padding: EdgeInsets.all(5)),\r\n                ],\r\n              ),\r\n            ),\r\n\r\n            // Garage\r\n            Card(\r\n              shape: RoundedRectangleBorder(\r\n                borderRadius: BorderRadius.all(Radius.circular(20)),\r\n                side: BorderSide(color: Colors.white60, width: 3),\r\n              ),\r\n              color: Colors.black,\r\n              child: Column(\r\n                mainAxisAlignment: MainAxisAlignment.spaceBetween,\r\n                crossAxisAlignment: CrossAxisAlignment.center,\r\n                children: [\r\n                  // Padding(padding: EdgeInsets.all(15)),\r\n                  Image.asset('assets/images/garage.png'),\r\n                  Padding(\r\n                    padding: EdgeInsets.all(0),\r\n                    child: const Text(\r\n                      'Garage',\r\n                      style: TextStyle(\r\n                        fontSize: 20,\r\n                        color: Colors.white70,\r\n                        fontWeight: FontWeight.bold,\r\n                      ),\r\n                    ),\r\n                  ),\r\n                  Row(\r\n                    mainAxisAlignment: MainAxisAlignment.spaceAround,\r\n                    children: [\r\n                      Text(\r\n                        'Devices: 4', // 4 là số lượng thiết bị hiện có\r\n                        style: TextStyle(\r\n                          fontSize: 16,\r\n                          color: Colors.white70,\r\n                          fontWeight: FontWeight.bold,\r\n                        ),\r\n                      ),\r\n                      Text(\r\n                        'Deactivate', // tắt đèn thì chuyển màu và ngc lại\r\n                        style: TextStyle(\r\n                          fontSize: 16,\r\n                          color: Colors.red, // đổi màu để tắt hết đèn\r\n                          fontWeight: FontWeight.bold,\r\n                        ),\r\n                      ),\r\n                    ],\r\n                  ),\r\n                  Padding(padding: EdgeInsets.all(5)),\r\n                ],\r\n              ),\r\n            ),\r\n\r\n            // Garden\r\n            Card(\r\n              shape: RoundedRectangleBorder(\r\n                borderRadius: BorderRadius.all(Radius.circular(20)),\r\n                side: BorderSide(color: Colors.white60, width: 3),\r\n              ),\r\n              color: Colors.black,\r\n              child: Column(\r\n                mainAxisAlignment: MainAxisAlignment.spaceBetween,\r\n                crossAxisAlignment: CrossAxisAlignment.center,\r\n                children: [\r\n                  // Padding(padding: EdgeInsets.all(15)),\r\n                  Image.asset('assets/images/garden.png'),\r\n                  Padding(\r\n                    padding: EdgeInsets.all(0),\r\n                    child: const Text(\r\n                      'Garden',\r\n                      style: TextStyle(\r\n                        fontSize: 20,\r\n                        color: Colors.white70,\r\n                        fontWeight: FontWeight.bold,\r\n                      ),\r\n                    ),\r\n                  ),\r\n                  Row(\r\n                    mainAxisAlignment: MainAxisAlignment.spaceAround,\r\n                    children: [\r\n                      Text(\r\n                        'Devices: 4', // 4 là số lượng thiết bị hiện có\r\n                        style: TextStyle(\r\n                          fontSize: 16,\r\n                          color: Colors.white70,\r\n                          fontWeight: FontWeight.bold,\r\n                        ),\r\n                      ),\r\n                      Text(\r\n                        'Activate', // tắt đèn thì chuyển màu và ngc lại\r\n                        style: TextStyle(\r\n                          fontSize: 16,\r\n                          color: Colors.green, // đổi màu để tắt hết đèn\r\n                          fontWeight: FontWeight.bold,\r\n                        ),\r\n                      ),\r\n                    ],\r\n                  ),\r\n                  Padding(padding: EdgeInsets.all(5)),\r\n                ],\r\n              ),\r\n            ),\r\n\r\n            // Reading Room\r\n            Card(\r\n              shape: RoundedRectangleBorder(\r\n                borderRadius: BorderRadius.all(Radius.circular(20)),\r\n                side: BorderSide(color: Colors.white60, width: 3),\r\n              ),\r\n              color: Colors.black,\r\n              child: Column(\r\n                mainAxisAlignment: MainAxisAlignment.spaceBetween,\r\n                crossAxisAlignment: CrossAxisAlignment.center,\r\n                children: [\r\n                  // Padding(padding: EdgeInsets.all(15)),\r\n                  Image.asset('assets/images/reading.png'),\r\n                  Padding(\r\n                    padding: EdgeInsets.all(0),\r\n                    child: const Text(\r\n                      'Reading Room',\r\n                      style: TextStyle(\r\n                        fontSize: 20,\r\n                        color: Colors.white70,\r\n                        fontWeight: FontWeight.bold,\r\n                      ),\r\n                    ),\r\n                  ),\r\n                  Row(\r\n                    mainAxisAlignment: MainAxisAlignment.spaceAround,\r\n                    children: [\r\n                      Text(\r\n                        'Devices: 4', // 4 là số lượng thiết bị hiện có\r\n                        style: TextStyle(\r\n                          fontSize: 16,\r\n                          color: Colors.white70,\r\n                          fontWeight: FontWeight.bold,\r\n                        ),\r\n                      ),\r\n                      Text(\r\n                        'Activate', // tắt đèn thì chuyển màu và ngc lại\r\n                        style: TextStyle(\r\n                          fontSize: 16,\r\n                          color: Colors.green, // đổi màu để tắt hết đèn\r\n                          fontWeight: FontWeight.bold,\r\n                        ),\r\n                      ),\r\n                    ],\r\n                  ),\r\n                  Padding(padding: EdgeInsets.all(5)),\r\n                ],\r\n              ),\r\n            ),\r\n            Card(\r\n              shape: RoundedRectangleBorder(\r\n                borderRadius: BorderRadius.all(Radius.circular(20)),\r\n                side: BorderSide(color: Colors.white60, width: 3),\r\n              ),\r\n              color: Colors.black,\r\n              child: Column(\r\n                mainAxisAlignment: MainAxisAlignment.spaceBetween,\r\n                crossAxisAlignment: CrossAxisAlignment.center,\r\n                children: [\r\n                  // Padding(padding: EdgeInsets.all(15)),\r\n                  Image.asset('assets/images/Living_room.png'),\r\n                  Padding(\r\n                    padding: EdgeInsets.all(0),\r\n                    child: const Text(\r\n                      'Living Room',\r\n                      style: TextStyle(\r\n                        fontSize: 20,\r\n                        color: Colors.white70,\r\n                        fontWeight: FontWeight.bold,\r\n                      ),\r\n                    ),\r\n                  ),\r\n                  Row(\r\n                    mainAxisAlignment: MainAxisAlignment.spaceAround,\r\n                    children: [\r\n                      Text(\r\n                        'Devices: 4', // 4 là số lượng thiết bị hiện có\r\n                        style: TextStyle(\r\n                          fontSize: 16,\r\n                          color: Colors.white70,\r\n                          fontWeight: FontWeight.bold,\r\n                        ),\r\n                      ),\r\n                      Text(\r\n                        'Deactivate', // tắt đèn thì chuyển màu và ngc lại\r\n                        style: TextStyle(\r\n                          fontSize: 16,\r\n                          color: Colors.red, // đổi màu để tắt hết đèn\r\n                          fontWeight: FontWeight.bold,\r\n                        ),\r\n                      ),\r\n                    ],\r\n                  ),\r\n                  Padding(padding: EdgeInsets.all(5)),\r\n                ],\r\n              ),\r\n            ),\r\n          ],\r\n        ),\r\n      ),\r\n    );\r\n  }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/ui/home_screen/home_screen.dart b/lib/ui/home_screen/home_screen.dart
+--- a/lib/ui/home_screen/home_screen.dart	(revision a5ea87507a6252b7e0348c5da0315b01f589ce82)
++++ b/lib/ui/home_screen/home_screen.dart	(date 1761662176734)
+@@ -1,404 +1,225 @@
+ import 'package:flutter/material.dart';
++import 'package:num_1_test/models/room.dart';
+ import 'package:num_1_test/routing/app_routes.dart';
++import 'package:num_1_test/state/room_provider.dart';
++import 'package:num_1_test/ui/config_screen/config_room_card.dart';
++import 'package:provider/provider.dart';
++// import '../../models/room.dart';
++// import '../../state/room_provider.dart';
++// import '../config_screen/config_room_card.dart';
++import 'room_card.dart';
+ 
+-class HomeScreen extends StatelessWidget {
++class HomeScreen extends StatefulWidget {
+   const HomeScreen({super.key});
+ 
++  @override
++  State<StatefulWidget> createState() => _HomeScreenState();
++}
++
++class _HomeScreenState extends State<HomeScreen>
++    with SingleTickerProviderStateMixin {
++  bool isToggle = false;
++  late AnimationController _animationController;
++  bool isLongPress = false;
++  bool isPress = false;
++  bool state = false;
++  bool isShowIconMenu = false;
++
++  Future<void> _onAddRoom(BuildContext context) async {
++    final room = await Navigator.push<Room>(
++      context,
++      MaterialPageRoute(builder: (_) => const ConfigRoomCard()),
++    );
++    if (room != null && context.mounted) {
++      await context.read<RoomProvider>().add(room);
++    }
++  }
++
++  @override
++  void initState() {
++    super.initState();
++    _animationController = AnimationController(
++      vsync: this,
++      duration: Duration(milliseconds: 500),
++    );
++  }
++
++  void _toggleMenu() {
++    setState(() {
++      isToggle = !isToggle;
++      isShowIconMenu = !isShowIconMenu;
++
++      isToggle
++          ? _animationController.forward()
++          : _animationController.reverse();
++    });
++  }
++
+   @override
+   Widget build(BuildContext context) {
++    final rooms = context.watch<RoomProvider>().rooms;
++
+     return Scaffold(
+-      resizeToAvoidBottomInset: true,
+-      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+-      floatingActionButton: FloatingActionButton.extended(
+-        tooltip: 'add a new room',
+-        onPressed: () {},
+-        label: Row(
+-          children: [
+-            Icon(Icons.add, color: Colors.white),
+-            Padding(padding: EdgeInsets.fromLTRB(0, 0, 7, 0)),
+-            Text('Add room'),
+-          ],
+-        ),
+-      ),
+       appBar: AppBar(
+-        title: const Text('All Rooms'),
++        title: const Text('My Rooms'),
++        actions: [
++          IconButton(
++            onPressed: _toggleMenu,
++            icon: AnimatedIcon(
++              icon: AnimatedIcons.menu_close,
++              progress: _animationController,
++            ),
++          ),
++        ],
+         leading: BackButton(
+           onPressed: () => {
+-            Navigator.of(context).popAndPushNamed(AppRoutes.login),
++            Navigator.popAndPushNamed(context, AppRoutes.login),
+             ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(
+                 content: const Text('You\'ve just logout'),
+-                duration: Duration(seconds: 2),
++                duration: Duration(milliseconds: 200),
+               ),
+             ),
+           },
+         ),
+       ),
+-      body: Padding(
+-        padding: const EdgeInsets.fromLTRB(12, 50, 12, 50),
+-        child: GridView.count(
+-          childAspectRatio: .90, // chỉnh tỉ lệ chiều cao từng thẻ
+-          crossAxisCount: 2, // 2 cột
+-          crossAxisSpacing: 5, // khoảng cách dọc
+-          mainAxisSpacing: 16, // khoảng cách ngang
+-          // Chứa các phòng
+-          children: [
+-            // Living Room
+-            InkWell(
+-              onTap: () => Navigator.pushNamed(context, AppRoutes.livingRoom),
+-              child: Card(
+-                shape: RoundedRectangleBorder(
+-                  borderRadius: BorderRadius.all(Radius.circular(20)),
+-                  side: BorderSide(color: Colors.white60, width: 3),
++      floatingActionButton: FloatingActionButton(
++        onPressed: () => _onAddRoom(context),
++        child: const Icon(Icons.add),
++      ),
++      body: rooms.isEmpty
++          ? Stack(
++              children: [
++                const Center(
++                  child: Text('Chưa có phòng nào. Hãy bấm + để thêm!'),
++                  // ShowIconOptions(isShowMenu: ,)
+                 ),
+-                color: Colors.black,
+-                child: Column(
+-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+-                  crossAxisAlignment: CrossAxisAlignment.center,
+-                  children: [
+-                    // Padding(padding: EdgeInsets.all(15)),
+-                    Image.asset('assets/images/Living_room.png'),
+-                    Padding(
+-                      padding: EdgeInsets.all(0),
+-                      child: const Text(
+-                        'Living Room',
+-                        style: TextStyle(
+-                          fontSize: 20,
+-                          color: Colors.white70,
+-                          fontWeight: FontWeight.bold,
+-                        ),
+-                      ),
+-                    ),
+-                    Row(
+-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+-                      children: [
+-                        Text(
+-                          'Devices: 4', // 4 là số lượng thiết bị hiện có
+-                          style: TextStyle(
+-                            fontSize: 16,
+-                            color: Colors.white70,
+-                            fontWeight: FontWeight.bold,
+-                          ),
+-                        ),
+-                        Text(
+-                          'Deactivate', // tắt đèn thì chuyển màu và ngc lại
+-                          style: TextStyle(
+-                            fontSize: 16,
+-                            color: Colors.red, // đổi màu để tắt hết đèn
+-                            fontWeight: FontWeight.bold,
+-                          ),
+-                        ),
+-                      ],
+-                    ),
+-                    Padding(padding: EdgeInsets.all(5)),
+-                  ],
+-                ),
+-              ),
++
++                // Hiển thị hoặc tắt khi bấm vào icon 3 gạch trên thanh AppBar
++                if (isShowIconMenu) ShowIconOptions(isShowMenu: isShowIconMenu),
++              ],
++            )
++          : Stack(
++              children: [
++                GridView.builder(
++                  padding: const EdgeInsets.all(16),
++                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
++                    crossAxisCount: 2,
++                    childAspectRatio: 0.9,
++                    crossAxisSpacing: 12,
++                    mainAxisSpacing: 12,
++                  ),
++                  itemCount: rooms.length,
++                  itemBuilder: (context, i) {
++                    final r = rooms[i];
++                    return RoomCard(
++                      title: r.title,
++                      imagePath: r.imagePath,
++                      deviceCount: r.deviceCount,
++                      initialState: r.initialState,
++                      onLongPress: () async {
++                        final shouldDelete = await showDialog<bool>(
++                          context: context,
++                          builder: (context) {
++                            return AlertDialog(
++                              backgroundColor: Colors.black,
++                              title: const Text('Xác nhận xóa phòng'),
++                              content: Text(
++                                'Bạn có chắc chắn muốn xóa "${r.title}" không?',
++                              ),
++                              actions: [
++                                TextButton(
++                                  onPressed: () =>
++                                      Navigator.pop(context, false),
++                                  child: const Text('Hủy'),
++                                ),
++                                TextButton(
++                                  onPressed: () => Navigator.pop(context, true),
++                                  child: const Text(
++                                    'Xóa',
++                                    style: TextStyle(color: Colors.red),
++                                  ),
++                                ),
++                              ],
++                            );
++                          },
++                        );
++
++                        if (shouldDelete == true && context.mounted) {
++                          context.read<RoomProvider>().removeById(r.id);
++                          ScaffoldMessenger.of(context).showSnackBar(
++                            SnackBar(
++                              content: Text('Đã xóa phòng "${r.title}"'),
++                              duration: const Duration(seconds: 2),
++                            ),
++                          );
++                        }
++                      },
++
++                      onDoubleTap: () {
++                        print("Double tap on room ${r.title}");
++                      },
++                    );
++                  },
++                ),
++
++                // Hiển thị hoặc tắt khi bấm vào icon 3 gạch trên thanh AppBar
++                if (isShowIconMenu) ShowIconOptions(isShowMenu: isShowIconMenu),
++              ],
+             ),
++    );
++  }
++}
++
++class ShowIconOptions extends StatefulWidget {
++  final bool isShowMenu;
++  const ShowIconOptions({super.key, required this.isShowMenu});
++
++  @override
++  State<ShowIconOptions> createState() => _ShowIconOptionsState();
++}
+ 
+-            // Bed Room
+-            InkWell(
+-              onTap: () => Navigator.pushNamed(context, AppRoutes.livingRoom),
+-              child: Card(
+-                shape: RoundedRectangleBorder(
+-                  borderRadius: BorderRadius.all(Radius.circular(20)),
+-                  side: BorderSide(color: Colors.white60, width: 3),
+-                ),
+-                color: Colors.black,
+-                child: Column(
+-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+-                  crossAxisAlignment: CrossAxisAlignment.center,
+-                  children: [
+-                    // Padding(padding: EdgeInsets.all(15)),
+-                    Image.asset('assets/images/bed_room.png'),
+-                    Padding(
+-                      padding: EdgeInsets.all(0),
+-                      child: const Text(
+-                        'Bed Room',
+-                        style: TextStyle(
+-                          fontSize: 20,
+-                          color: Colors.white70,
+-                          fontWeight: FontWeight.bold,
+-                        ),
+-                      ),
+-                    ),
+-                    Row(
+-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+-                      children: [
+-                        Text(
+-                          'Devices: 4', // 4 là số lượng thiết bị hiện có
+-                          style: TextStyle(
+-                            fontSize: 16,
+-                            color: Colors.white70,
+-                            fontWeight: FontWeight.bold,
+-                          ),
+-                        ),
+-                        Text(
+-                          'Deactivate', // tắt đèn thì chuyển màu và ngc lại
+-                          style: TextStyle(
+-                            fontSize: 16,
+-                            color: Colors.red, // đổi màu để tắt hết đèn
+-                            fontWeight: FontWeight.bold,
+-                          ),
+-                        ),
+-                      ],
+-                    ),
+-                    Padding(padding: EdgeInsets.all(5)),
+-                  ],
+-                ),
+-              ),
+-            ),
+-
+-            // Kitchen
+-            Card(
+-              shape: RoundedRectangleBorder(
+-                borderRadius: BorderRadius.all(Radius.circular(20)),
+-                side: BorderSide(color: Colors.white60, width: 3),
+-              ),
+-              color: Colors.black,
+-              child: Column(
+-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+-                crossAxisAlignment: CrossAxisAlignment.center,
+-                children: [
+-                  // Padding(padding: EdgeInsets.all(15)),
+-                  Image.asset('assets/images/kitchen.png'),
+-                  Padding(
+-                    padding: EdgeInsets.all(0),
+-                    child: const Text(
+-                      'Kitchen',
+-                      style: TextStyle(
+-                        fontSize: 20,
+-                        color: Colors.white70,
+-                        fontWeight: FontWeight.bold,
+-                      ),
+-                    ),
+-                  ),
+-                  Row(
+-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+-                    children: [
+-                      Text(
+-                        'Devices: 4', // 4 là số lượng thiết bị hiện có
+-                        style: TextStyle(
+-                          fontSize: 16,
+-                          color: Colors.white70,
+-                          fontWeight: FontWeight.bold,
+-                        ),
+-                      ),
+-                      Text(
+-                        'Activate', // tắt đèn thì chuyển màu và ngc lại
+-                        style: TextStyle(
+-                          fontSize: 16,
+-                          color: Colors.green, // đổi màu để tắt hết đèn
+-                          fontWeight: FontWeight.bold,
+-                        ),
+-                      ),
+-                    ],
+-                  ),
+-                  Padding(padding: EdgeInsets.all(5)),
+-                ],
+-              ),
+-            ),
+-
+-            // Garage
+-            Card(
+-              shape: RoundedRectangleBorder(
+-                borderRadius: BorderRadius.all(Radius.circular(20)),
+-                side: BorderSide(color: Colors.white60, width: 3),
+-              ),
+-              color: Colors.black,
+-              child: Column(
+-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+-                crossAxisAlignment: CrossAxisAlignment.center,
+-                children: [
+-                  // Padding(padding: EdgeInsets.all(15)),
+-                  Image.asset('assets/images/garage.png'),
+-                  Padding(
+-                    padding: EdgeInsets.all(0),
+-                    child: const Text(
+-                      'Garage',
+-                      style: TextStyle(
+-                        fontSize: 20,
+-                        color: Colors.white70,
+-                        fontWeight: FontWeight.bold,
+-                      ),
+-                    ),
+-                  ),
+-                  Row(
+-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+-                    children: [
+-                      Text(
+-                        'Devices: 4', // 4 là số lượng thiết bị hiện có
+-                        style: TextStyle(
+-                          fontSize: 16,
+-                          color: Colors.white70,
+-                          fontWeight: FontWeight.bold,
+-                        ),
+-                      ),
+-                      Text(
+-                        'Deactivate', // tắt đèn thì chuyển màu và ngc lại
+-                        style: TextStyle(
+-                          fontSize: 16,
+-                          color: Colors.red, // đổi màu để tắt hết đèn
+-                          fontWeight: FontWeight.bold,
+-                        ),
+-                      ),
+-                    ],
+-                  ),
+-                  Padding(padding: EdgeInsets.all(5)),
+-                ],
+-              ),
+-            ),
++class _ShowIconOptionsState extends State<ShowIconOptions> {
++  @override
++  Widget build(BuildContext context) {
++    return Positioned(
++      right: 5,
++      child: Card(
++        elevation: 5,
++        shape: RoundedRectangleBorder(
++          borderRadius: BorderRadiusGeometry.circular(15),
++        ),
++        child: Column(
++          children: [
++            IconButton(onPressed: () {}, icon: Icon(Icons.settings)),
++            IconButton(onPressed: () {}, icon: Icon(Icons.info)),
++            IconButton(
++              onPressed: () {
++                Navigator.pushNamedAndRemoveUntil(
++                  context,
++                  AppRoutes.login,
++                  (_) => false,
++                );
++              },
++              icon: Icon(Icons.logout),
++            ),
++          ],
++        ),
++      ),
++    );
++  }
++}
+ 
+-            // Garden
+-            Card(
+-              shape: RoundedRectangleBorder(
+-                borderRadius: BorderRadius.all(Radius.circular(20)),
+-                side: BorderSide(color: Colors.white60, width: 3),
+-              ),
+-              color: Colors.black,
+-              child: Column(
+-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+-                crossAxisAlignment: CrossAxisAlignment.center,
+-                children: [
+-                  // Padding(padding: EdgeInsets.all(15)),
+-                  Image.asset('assets/images/garden.png'),
+-                  Padding(
+-                    padding: EdgeInsets.all(0),
+-                    child: const Text(
+-                      'Garden',
+-                      style: TextStyle(
+-                        fontSize: 20,
+-                        color: Colors.white70,
+-                        fontWeight: FontWeight.bold,
+-                      ),
+-                    ),
+-                  ),
+-                  Row(
+-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+-                    children: [
+-                      Text(
+-                        'Devices: 4', // 4 là số lượng thiết bị hiện có
+-                        style: TextStyle(
+-                          fontSize: 16,
+-                          color: Colors.white70,
+-                          fontWeight: FontWeight.bold,
+-                        ),
+-                      ),
+-                      Text(
+-                        'Activate', // tắt đèn thì chuyển màu và ngc lại
+-                        style: TextStyle(
+-                          fontSize: 16,
+-                          color: Colors.green, // đổi màu để tắt hết đèn
+-                          fontWeight: FontWeight.bold,
+-                        ),
+-                      ),
+-                    ],
+-                  ),
+-                  Padding(padding: EdgeInsets.all(5)),
+-                ],
+-              ),
+-            ),
++class MyAlertDialog extends StatefulWidget {
++  const MyAlertDialog({super.key});
++
++  @override
++  State<MyAlertDialog> createState() => _MyAlertDialogState();
++}
+ 
+-            // Reading Room
+-            Card(
+-              shape: RoundedRectangleBorder(
+-                borderRadius: BorderRadius.all(Radius.circular(20)),
+-                side: BorderSide(color: Colors.white60, width: 3),
+-              ),
+-              color: Colors.black,
+-              child: Column(
+-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+-                crossAxisAlignment: CrossAxisAlignment.center,
+-                children: [
+-                  // Padding(padding: EdgeInsets.all(15)),
+-                  Image.asset('assets/images/reading.png'),
+-                  Padding(
+-                    padding: EdgeInsets.all(0),
+-                    child: const Text(
+-                      'Reading Room',
+-                      style: TextStyle(
+-                        fontSize: 20,
+-                        color: Colors.white70,
+-                        fontWeight: FontWeight.bold,
+-                      ),
+-                    ),
+-                  ),
+-                  Row(
+-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+-                    children: [
+-                      Text(
+-                        'Devices: 4', // 4 là số lượng thiết bị hiện có
+-                        style: TextStyle(
+-                          fontSize: 16,
+-                          color: Colors.white70,
+-                          fontWeight: FontWeight.bold,
+-                        ),
+-                      ),
+-                      Text(
+-                        'Activate', // tắt đèn thì chuyển màu và ngc lại
+-                        style: TextStyle(
+-                          fontSize: 16,
+-                          color: Colors.green, // đổi màu để tắt hết đèn
+-                          fontWeight: FontWeight.bold,
+-                        ),
+-                      ),
+-                    ],
+-                  ),
+-                  Padding(padding: EdgeInsets.all(5)),
+-                ],
+-              ),
+-            ),
+-            Card(
+-              shape: RoundedRectangleBorder(
+-                borderRadius: BorderRadius.all(Radius.circular(20)),
+-                side: BorderSide(color: Colors.white60, width: 3),
+-              ),
+-              color: Colors.black,
+-              child: Column(
+-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+-                crossAxisAlignment: CrossAxisAlignment.center,
+-                children: [
+-                  // Padding(padding: EdgeInsets.all(15)),
+-                  Image.asset('assets/images/Living_room.png'),
+-                  Padding(
+-                    padding: EdgeInsets.all(0),
+-                    child: const Text(
+-                      'Living Room',
+-                      style: TextStyle(
+-                        fontSize: 20,
+-                        color: Colors.white70,
+-                        fontWeight: FontWeight.bold,
+-                      ),
+-                    ),
+-                  ),
+-                  Row(
+-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+-                    children: [
+-                      Text(
+-                        'Devices: 4', // 4 là số lượng thiết bị hiện có
+-                        style: TextStyle(
+-                          fontSize: 16,
+-                          color: Colors.white70,
+-                          fontWeight: FontWeight.bold,
+-                        ),
+-                      ),
+-                      Text(
+-                        'Deactivate', // tắt đèn thì chuyển màu và ngc lại
+-                        style: TextStyle(
+-                          fontSize: 16,
+-                          color: Colors.red, // đổi màu để tắt hết đèn
+-                          fontWeight: FontWeight.bold,
+-                        ),
+-                      ),
+-                    ],
+-                  ),
+-                  Padding(padding: EdgeInsets.all(5)),
+-                ],
+-              ),
+-            ),
+-          ],
+-        ),
+-      ),
+-    );
++class _MyAlertDialogState extends State<MyAlertDialog> {
++  @override
++  Widget build(BuildContext context) {
++    return const Placeholder();
+   }
+ }
+Index: lib/routing/app_routes.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>class AppRoutes {\r\n  static const login = '/login';\r\n  static const home = '/home';\r\n  static const room = '/room';\r\n  static const configRoom = 'config_room';\r\n  static const device = '/device';\r\n  static const configDevice = '/config_device';\r\n\r\n  // Điều hướng trang đến các phòng khi mới bắt đầu\r\n  static const livingRoom = '/living_room';\r\n  static const bedRoom = 'bed_room';\r\n  static const kitchen = 'kitchen';\r\n  static const garage = 'garage';\r\n  static const garden = 'garden';\r\n  static const readingRoom = 'reading_room';\r\n\r\n  // Điều hướng đến các trang được thêm vào\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/routing/app_routes.dart b/lib/routing/app_routes.dart
+--- a/lib/routing/app_routes.dart	(revision a5ea87507a6252b7e0348c5da0315b01f589ce82)
++++ b/lib/routing/app_routes.dart	(date 1761662176732)
+@@ -1,7 +1,6 @@
+ class AppRoutes {
+   static const login = '/login';
+-  static const home = '/home';
+-  static const room = '/room';
++  static const home = '/home'; // thẻ các phòng
+   static const configRoom = 'config_room';
+   static const device = '/device';
+   static const configDevice = '/config_device';
+Index: test/widget_test.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// This is a basic Flutter widget test.\r\n//\r\n// To perform an interaction with a widget in your test, use the WidgetTester\r\n// utility in the flutter_test package. For example, you can send tap and scroll\r\n// gestures. You can also use WidgetTester to find child widgets in the widget\r\n// tree, read text, and verify that the values of widget properties are correct.\r\n\r\nimport 'package:flutter/material.dart';\r\nimport 'package:flutter_test/flutter_test.dart';\r\n\r\nimport 'package:num_1_test/main.dart';\r\n\r\nvoid main() {\r\n  testWidgets('Counter increments smoke test', (WidgetTester tester) async {\r\n    // Build our app and trigger a frame.\r\n    await tester.pumpWidget(const MyApp());\r\n\r\n    // Verify that our counter starts at 0.\r\n    expect(find.text('0'), findsOneWidget);\r\n    expect(find.text('1'), findsNothing);\r\n\r\n    // Tap the '+' icon and trigger a frame.\r\n    await tester.tap(find.byIcon(Icons.add));\r\n    await tester.pump();\r\n\r\n    // Verify that our counter has incremented.\r\n    expect(find.text('0'), findsNothing);\r\n    expect(find.text('1'), findsOneWidget);\r\n  });\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/test/widget_test.dart b/test/widget_test.dart
+--- a/test/widget_test.dart	(revision a5ea87507a6252b7e0348c5da0315b01f589ce82)
++++ b/test/widget_test.dart	(date 1761662176736)
+@@ -8,7 +8,8 @@
+ import 'package:flutter/material.dart';
+ import 'package:flutter_test/flutter_test.dart';
+ 
+-import 'package:num_1_test/main.dart';
++// import 'package:num_1_test/main.dart';
++import 'package:num_1_test/my_app.dart';
+ 
+ void main() {
+   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+Index: lib/main.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import 'package:flutter/material.dart';\r\nimport 'package:num_1_test/routing/app_router.dart';\r\nimport 'package:num_1_test/routing/app_routes.dart';\r\nimport 'package:num_1_test/ui/login/login_screen.dart';\r\n\r\nvoid main() {\r\n  runApp(const MyApp());\r\n}\r\n\r\nclass MyApp extends StatelessWidget {\r\n  const MyApp({super.key});\r\n\r\n  @override\r\n  Widget build(BuildContext context) {\r\n    final colorScheme = Theme.of(context).colorScheme;\r\n\r\n    return MaterialApp(\r\n      onGenerateRoute: onGenerateRoute, // <- dùng router tự viết\r\n      initialRoute: AppRoutes.login, // <- trang bắt đầu\r\n      title: 'Flutter Demo',\r\n      debugShowCheckedModeBanner: false,\r\n      theme: ThemeData(\r\n        appBarTheme: const AppBarTheme(\r\n          backgroundColor: Color(0xFF303030), // màu nền\r\n          foregroundColor: Colors.white, // màu chữ và icon\r\n          elevation: 0,\r\n          centerTitle: true, // căn giữa tiêu đề\r\n          toolbarHeight: 80, // độ cao\r\n          titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),\r\n        ),\r\n        fontFamily: 'Poppins',\r\n        colorScheme: ColorScheme.fromSeed(\r\n          seedColor: Colors.blueGrey,\r\n          brightness: Brightness.light,\r\n        ),\r\n        scaffoldBackgroundColor: Color(0xFF303030),\r\n        textTheme: ThemeData.light().textTheme.apply(\r\n          bodyColor: Colors.white,\r\n          displayColor: Colors.white,\r\n          decorationColor: Colors.white,\r\n        ),\r\n        floatingActionButtonTheme: FloatingActionButtonThemeData(\r\n          extendedPadding: EdgeInsetsGeometry.all(17),\r\n          backgroundColor: Color(0xFF303030),\r\n          foregroundColor: Colors.white,\r\n          hoverColor: Colors.blue,\r\n          hoverElevation: 50,\r\n          elevation: 0,\r\n          focusColor: Colors.white70,\r\n          focusElevation: 3,\r\n          shape: RoundedRectangleBorder(\r\n            borderRadius: BorderRadius.circular(21),\r\n            side: BorderSide(color: Colors.white, width: 3),\r\n          ),\r\n        ),\r\n        elevatedButtonTheme: ElevatedButtonThemeData(\r\n          style: ElevatedButton.styleFrom(\r\n            backgroundColor: colorScheme.onSurface,\r\n            foregroundColor: colorScheme.surface,\r\n            shape: RoundedRectangleBorder(\r\n              borderRadius: BorderRadius.circular(45),\r\n              side: BorderSide(color: Colors.white, width: 3),\r\n            ),\r\n          ),\r\n        ),\r\n        listTileTheme: ListTileThemeData(\r\n          tileColor: Colors.black,\r\n          textColor: Colors.white,\r\n          shape: RoundedRectangleBorder(\r\n            borderRadius: BorderRadius.all(Radius.circular(20)),\r\n            side: BorderSide(color: Colors.white60, width: 3),\r\n          ),\r\n        ),\r\n      ),\r\n      home: const LoginScreen(),\r\n    );\r\n  }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/main.dart b/lib/main.dart
+--- a/lib/main.dart	(revision a5ea87507a6252b7e0348c5da0315b01f589ce82)
++++ b/lib/main.dart	(date 1761662176731)
+@@ -1,78 +1,16 @@
+ import 'package:flutter/material.dart';
+-import 'package:num_1_test/routing/app_router.dart';
+-import 'package:num_1_test/routing/app_routes.dart';
+-import 'package:num_1_test/ui/login/login_screen.dart';
++import 'package:provider/provider.dart';
++import 'package:num_1_test/state/room_provider.dart';
++import 'my_app.dart';
+ 
+ void main() {
+-  runApp(const MyApp());
+-}
+-
+-class MyApp extends StatelessWidget {
+-  const MyApp({super.key});
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    final colorScheme = Theme.of(context).colorScheme;
+-
+-    return MaterialApp(
+-      onGenerateRoute: onGenerateRoute, // <- dùng router tự viết
+-      initialRoute: AppRoutes.login, // <- trang bắt đầu
+-      title: 'Flutter Demo',
+-      debugShowCheckedModeBanner: false,
+-      theme: ThemeData(
+-        appBarTheme: const AppBarTheme(
+-          backgroundColor: Color(0xFF303030), // màu nền
+-          foregroundColor: Colors.white, // màu chữ và icon
+-          elevation: 0,
+-          centerTitle: true, // căn giữa tiêu đề
+-          toolbarHeight: 80, // độ cao
+-          titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+-        ),
+-        fontFamily: 'Poppins',
+-        colorScheme: ColorScheme.fromSeed(
+-          seedColor: Colors.blueGrey,
+-          brightness: Brightness.light,
+-        ),
+-        scaffoldBackgroundColor: Color(0xFF303030),
+-        textTheme: ThemeData.light().textTheme.apply(
+-          bodyColor: Colors.white,
+-          displayColor: Colors.white,
+-          decorationColor: Colors.white,
+-        ),
+-        floatingActionButtonTheme: FloatingActionButtonThemeData(
+-          extendedPadding: EdgeInsetsGeometry.all(17),
+-          backgroundColor: Color(0xFF303030),
+-          foregroundColor: Colors.white,
+-          hoverColor: Colors.blue,
+-          hoverElevation: 50,
+-          elevation: 0,
+-          focusColor: Colors.white70,
+-          focusElevation: 3,
+-          shape: RoundedRectangleBorder(
+-            borderRadius: BorderRadius.circular(21),
+-            side: BorderSide(color: Colors.white, width: 3),
+-          ),
+-        ),
+-        elevatedButtonTheme: ElevatedButtonThemeData(
+-          style: ElevatedButton.styleFrom(
+-            backgroundColor: colorScheme.onSurface,
+-            foregroundColor: colorScheme.surface,
+-            shape: RoundedRectangleBorder(
+-              borderRadius: BorderRadius.circular(45),
+-              side: BorderSide(color: Colors.white, width: 3),
+-            ),
+-          ),
+-        ),
+-        listTileTheme: ListTileThemeData(
+-          tileColor: Colors.black,
+-          textColor: Colors.white,
+-          shape: RoundedRectangleBorder(
+-            borderRadius: BorderRadius.all(Radius.circular(20)),
+-            side: BorderSide(color: Colors.white60, width: 3),
+-          ),
+-        ),
+-      ),
+-      home: const LoginScreen(),
+-    );
+-  }
++  WidgetsFlutterBinding.ensureInitialized();
++  runApp(
++    MultiProvider(
++      providers: [
++        ChangeNotifierProvider(create: (_) => RoomProvider()..load()),
++      ],
++      child: const MyApp(),
++    ),
++  );
+ }
+Index: lib/routing/app_router.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import 'package:flutter/material.dart';\r\nimport 'package:num_1_test/ui/room_page/living_room/living_room.dart';\r\nimport '../ui/home_screen/home_screen.dart';\r\nimport '../ui/login/login_screen.dart';\r\nimport 'app_routes.dart';\r\n\r\nRoute<dynamic>? onGenerateRoute(RouteSettings settings) {\r\n  switch (settings.name) {\r\n    case '/':\r\n    case AppRoutes.login:\r\n      return MaterialPageRoute(builder: (_) => const LoginScreen());\r\n    case AppRoutes.home:\r\n      return MaterialPageRoute(builder: (_) => const HomeScreen());\r\n    // case AppRoutes.configRoom:\r\n    //   return MaterialPageRoute(builder: (_) => ConfigRoomScreen());\r\n    // case AppRoutes.device:\r\n    // return MaterialPageRoute(builder: (_) => DeviceScreen());\r\n    // case AppRoutes.configDevice:\r\n    //   return MaterialPageRoute(builder: (_) => ConfigDeviceScreen());\r\n    case AppRoutes.livingRoom:\r\n      return MaterialPageRoute(builder: (_) => LivingRoom());\r\n  }\r\n  return null;\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/routing/app_router.dart b/lib/routing/app_router.dart
+--- a/lib/routing/app_router.dart	(revision a5ea87507a6252b7e0348c5da0315b01f589ce82)
++++ b/lib/routing/app_router.dart	(date 1761662176732)
+@@ -1,5 +1,6 @@
+ import 'package:flutter/material.dart';
+-import 'package:num_1_test/ui/room_page/living_room/living_room.dart';
++import 'package:num_1_test/ui/room_screen/living_room/living_room.dart';
++import 'package:num_1_test/ui/config_screen/config_room_card.dart';
+ import '../ui/home_screen/home_screen.dart';
+ import '../ui/login/login_screen.dart';
+ import 'app_routes.dart';
+@@ -11,14 +12,15 @@
+       return MaterialPageRoute(builder: (_) => const LoginScreen());
+     case AppRoutes.home:
+       return MaterialPageRoute(builder: (_) => const HomeScreen());
+-    // case AppRoutes.configRoom:
+-    //   return MaterialPageRoute(builder: (_) => ConfigRoomScreen());
++    case AppRoutes.livingRoom:
++      return MaterialPageRoute(builder: (_) => const LivingRoom());
++    case AppRoutes.configRoom:
++      return MaterialPageRoute(builder: (_) => const ConfigRoomCard());
+     // case AppRoutes.device:
+     // return MaterialPageRoute(builder: (_) => DeviceScreen());
+     // case AppRoutes.configDevice:
+     //   return MaterialPageRoute(builder: (_) => ConfigDeviceScreen());
+-    case AppRoutes.livingRoom:
+-      return MaterialPageRoute(builder: (_) => LivingRoom());
+-  }
+-  return null;
++    default:
++      return null;
++  }
+ }
+Index: pubspec.lock
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># Generated by pub\r\n# See https://dart.dev/tools/pub/glossary#lockfile\r\npackages:\r\n  async:\r\n    dependency: transitive\r\n    description:\r\n      name: async\r\n      sha256: \"758e6d74e971c3e5aceb4110bfd6698efc7f501675bcfe0c775459a8140750eb\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"2.13.0\"\r\n  bloc:\r\n    dependency: transitive\r\n    description:\r\n      name: bloc\r\n      sha256: e18b8e7825e9921d67a6d256dba0b6015ece8a577eb0a411845c46a352994d78\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"9.0.1\"\r\n  boolean_selector:\r\n    dependency: transitive\r\n    description:\r\n      name: boolean_selector\r\n      sha256: \"8aab1771e1243a5063b8b0ff68042d67334e3feab9e95b9490f9a6ebf73b42ea\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"2.1.2\"\r\n  characters:\r\n    dependency: transitive\r\n    description:\r\n      name: characters\r\n      sha256: f71061c654a3380576a52b451dd5532377954cf9dbd272a78fc8479606670803\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.4.0\"\r\n  clock:\r\n    dependency: transitive\r\n    description:\r\n      name: clock\r\n      sha256: fddb70d9b5277016c77a80201021d40a2247104d9f4aa7bab7157b7e3f05b84b\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.1.2\"\r\n  collection:\r\n    dependency: transitive\r\n    description:\r\n      name: collection\r\n      sha256: \"2f5709ae4d3d59dd8f7cd309b4e023046b57d8a6c82130785d2b0e5868084e76\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.19.1\"\r\n  cupertino_icons:\r\n    dependency: \"direct main\"\r\n    description:\r\n      name: cupertino_icons\r\n      sha256: ba631d1c7f7bef6b729a622b7b752645a2d076dba9976925b8f25725a30e1ee6\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.0.8\"\r\n  fake_async:\r\n    dependency: transitive\r\n    description:\r\n      name: fake_async\r\n      sha256: \"5368f224a74523e8d2e7399ea1638b37aecfca824a3cc4dfdf77bf1fa905ac44\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.3.3\"\r\n  flutter:\r\n    dependency: \"direct main\"\r\n    description: flutter\r\n    source: sdk\r\n    version: \"0.0.0\"\r\n  flutter_bloc:\r\n    dependency: \"direct dev\"\r\n    description:\r\n      name: flutter_bloc\r\n      sha256: cf51747952201a455a1c840f8171d273be009b932c75093020f9af64f2123e38\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"9.1.1\"\r\n  flutter_lints:\r\n    dependency: \"direct dev\"\r\n    description:\r\n      name: flutter_lints\r\n      sha256: \"5398f14efa795ffb7a33e9b6a08798b26a180edac4ad7db3f231e40f82ce11e1\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"5.0.0\"\r\n  flutter_test:\r\n    dependency: \"direct dev\"\r\n    description: flutter\r\n    source: sdk\r\n    version: \"0.0.0\"\r\n  http:\r\n    dependency: \"direct main\"\r\n    description:\r\n      name: http\r\n      sha256: bb2ce4590bc2667c96f318d68cac1b5a7987ec819351d32b1c987239a815e007\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.5.0\"\r\n  http_parser:\r\n    dependency: transitive\r\n    description:\r\n      name: http_parser\r\n      sha256: \"178d74305e7866013777bab2c3d8726205dc5a4dd935297175b19a23a2e66571\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"4.1.2\"\r\n  leak_tracker:\r\n    dependency: transitive\r\n    description:\r\n      name: leak_tracker\r\n      sha256: \"33e2e26bdd85a0112ec15400c8cbffea70d0f9c3407491f672a2fad47915e2de\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"11.0.2\"\r\n  leak_tracker_flutter_testing:\r\n    dependency: transitive\r\n    description:\r\n      name: leak_tracker_flutter_testing\r\n      sha256: \"1dbc140bb5a23c75ea9c4811222756104fbcd1a27173f0c34ca01e16bea473c1\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"3.0.10\"\r\n  leak_tracker_testing:\r\n    dependency: transitive\r\n    description:\r\n      name: leak_tracker_testing\r\n      sha256: \"8d5a2d49f4a66b49744b23b018848400d23e54caf9463f4eb20df3eb8acb2eb1\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"3.0.2\"\r\n  lints:\r\n    dependency: transitive\r\n    description:\r\n      name: lints\r\n      sha256: c35bb79562d980e9a453fc715854e1ed39e24e7d0297a880ef54e17f9874a9d7\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"5.1.1\"\r\n  matcher:\r\n    dependency: transitive\r\n    description:\r\n      name: matcher\r\n      sha256: dc58c723c3c24bf8d3e2d3ad3f2f9d7bd9cf43ec6feaa64181775e60190153f2\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"0.12.17\"\r\n  material_color_utilities:\r\n    dependency: transitive\r\n    description:\r\n      name: material_color_utilities\r\n      sha256: f7142bb1154231d7ea5f96bc7bde4bda2a0945d2806bb11670e30b850d56bdec\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"0.11.1\"\r\n  meta:\r\n    dependency: transitive\r\n    description:\r\n      name: meta\r\n      sha256: e3641ec5d63ebf0d9b41bd43201a66e3fc79a65db5f61fc181f04cd27aab950c\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.16.0\"\r\n  nested:\r\n    dependency: transitive\r\n    description:\r\n      name: nested\r\n      sha256: \"03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.0.0\"\r\n  path:\r\n    dependency: transitive\r\n    description:\r\n      name: path\r\n      sha256: \"75cca69d1490965be98c73ceaea117e8a04dd21217b37b292c9ddbec0d955bc5\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.9.1\"\r\n  provider:\r\n    dependency: \"direct dev\"\r\n    description:\r\n      name: provider\r\n      sha256: \"4e82183fa20e5ca25703ead7e05de9e4cceed1fbd1eadc1ac3cb6f565a09f272\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"6.1.5+1\"\r\n  sky_engine:\r\n    dependency: transitive\r\n    description: flutter\r\n    source: sdk\r\n    version: \"0.0.0\"\r\n  source_span:\r\n    dependency: transitive\r\n    description:\r\n      name: source_span\r\n      sha256: \"254ee5351d6cb365c859e20ee823c3bb479bf4a293c22d17a9f1bf144ce86f7c\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.10.1\"\r\n  stack_trace:\r\n    dependency: transitive\r\n    description:\r\n      name: stack_trace\r\n      sha256: \"8b27215b45d22309b5cddda1aa2b19bdfec9df0e765f2de506401c071d38d1b1\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.12.1\"\r\n  stream_channel:\r\n    dependency: transitive\r\n    description:\r\n      name: stream_channel\r\n      sha256: \"969e04c80b8bcdf826f8f16579c7b14d780458bd97f56d107d3950fdbeef059d\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"2.1.4\"\r\n  string_scanner:\r\n    dependency: transitive\r\n    description:\r\n      name: string_scanner\r\n      sha256: \"921cd31725b72fe181906c6a94d987c78e3b98c2e205b397ea399d4054872b43\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.4.1\"\r\n  term_glyph:\r\n    dependency: transitive\r\n    description:\r\n      name: term_glyph\r\n      sha256: \"7f554798625ea768a7518313e58f83891c7f5024f88e46e7182a4558850a4b8e\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.2.2\"\r\n  test_api:\r\n    dependency: transitive\r\n    description:\r\n      name: test_api\r\n      sha256: \"522f00f556e73044315fa4585ec3270f1808a4b186c936e612cab0b565ff1e00\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"0.7.6\"\r\n  typed_data:\r\n    dependency: transitive\r\n    description:\r\n      name: typed_data\r\n      sha256: f9049c039ebfeb4cf7a7104a675823cd72dba8297f264b6637062516699fa006\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.4.0\"\r\n  vector_math:\r\n    dependency: transitive\r\n    description:\r\n      name: vector_math\r\n      sha256: d530bd74fea330e6e364cda7a85019c434070188383e1cd8d9777ee586914c5b\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"2.2.0\"\r\n  vm_service:\r\n    dependency: transitive\r\n    description:\r\n      name: vm_service\r\n      sha256: \"45caa6c5917fa127b5dbcfbd1fa60b14e583afdc08bfc96dda38886ca252eb60\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"15.0.2\"\r\n  web:\r\n    dependency: transitive\r\n    description:\r\n      name: web\r\n      sha256: \"868d88a33d8a87b18ffc05f9f030ba328ffefba92d6c127917a2ba740f9cfe4a\"\r\n      url: \"https://pub.dev\"\r\n    source: hosted\r\n    version: \"1.1.1\"\r\nsdks:\r\n  dart: \">=3.9.2 <4.0.0\"\r\n  flutter: \">=3.18.0-18.0.pre.54\"\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pubspec.lock b/pubspec.lock
+--- a/pubspec.lock	(revision a5ea87507a6252b7e0348c5da0315b01f589ce82)
++++ b/pubspec.lock	(date 1761662358264)
+@@ -13,10 +13,10 @@
+     dependency: transitive
+     description:
+       name: bloc
+-      sha256: e18b8e7825e9921d67a6d256dba0b6015ece8a577eb0a411845c46a352994d78
++      sha256: a2cebb899f91d36eeeaa55c7b20b5915db5a9df1b8fd4a3c9c825e22e474537d
+       url: "https://pub.dev"
+     source: hosted
+-    version: "9.0.1"
++    version: "9.1.0"
+   boolean_selector:
+     dependency: transitive
+     description:
+@@ -65,6 +65,22 @@
+       url: "https://pub.dev"
+     source: hosted
+     version: "1.3.3"
++  ffi:
++    dependency: transitive
++    description:
++      name: ffi
++      sha256: "289279317b4b16eb2bb7e271abccd4bf84ec9bdcbe999e278a94b804f5630418"
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.1.4"
++  file:
++    dependency: transitive
++    description:
++      name: file
++      sha256: a3b4f84adafef897088c160faf7dfffb7696046cb13ae90b508c2cbc95d3b8d4
++      url: "https://pub.dev"
++    source: hosted
++    version: "7.0.1"
+   flutter:
+     dependency: "direct main"
+     description: flutter
+@@ -91,6 +107,11 @@
+     description: flutter
+     source: sdk
+     version: "0.0.0"
++  flutter_web_plugins:
++    dependency: transitive
++    description: flutter
++    source: sdk
++    version: "0.0.0"
+   http:
+     dependency: "direct main"
+     description:
+@@ -179,14 +200,110 @@
+       url: "https://pub.dev"
+     source: hosted
+     version: "1.9.1"
++  path_provider_linux:
++    dependency: transitive
++    description:
++      name: path_provider_linux
++      sha256: f7a1fe3a634fe7734c8d3f2766ad746ae2a2884abe22e241a8b301bf5cac3279
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.2.1"
++  path_provider_platform_interface:
++    dependency: transitive
++    description:
++      name: path_provider_platform_interface
++      sha256: "88f5779f72ba699763fa3a3b06aa4bf6de76c8e5de842cf6f29e2e06476c2334"
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.1.2"
++  path_provider_windows:
++    dependency: transitive
++    description:
++      name: path_provider_windows
++      sha256: bd6f00dbd873bfb70d0761682da2b3a2c2fccc2b9e84c495821639601d81afe7
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.3.0"
++  platform:
++    dependency: transitive
++    description:
++      name: platform
++      sha256: "5d6b1b0036a5f331ebc77c850ebc8506cbc1e9416c27e59b439f917a902a4984"
++      url: "https://pub.dev"
++    source: hosted
++    version: "3.1.6"
++  plugin_platform_interface:
++    dependency: transitive
++    description:
++      name: plugin_platform_interface
++      sha256: "4820fbfdb9478b1ebae27888254d445073732dae3d6ea81f0b7e06d5dedc3f02"
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.1.8"
+   provider:
+-    dependency: "direct dev"
++    dependency: "direct main"
+     description:
+       name: provider
+       sha256: "4e82183fa20e5ca25703ead7e05de9e4cceed1fbd1eadc1ac3cb6f565a09f272"
+       url: "https://pub.dev"
+     source: hosted
+     version: "6.1.5+1"
++  shared_preferences:
++    dependency: "direct main"
++    description:
++      name: shared_preferences
++      sha256: "6e8bf70b7fef813df4e9a36f658ac46d107db4b4cfe1048b477d4e453a8159f5"
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.5.3"
++  shared_preferences_android:
++    dependency: transitive
++    description:
++      name: shared_preferences_android
++      sha256: "34266009473bf71d748912da4bf62d439185226c03e01e2d9687bc65bbfcb713"
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.4.15"
++  shared_preferences_foundation:
++    dependency: transitive
++    description:
++      name: shared_preferences_foundation
++      sha256: "1c33a907142607c40a7542768ec9badfd16293bac51da3a4482623d15845f88b"
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.5.5"
++  shared_preferences_linux:
++    dependency: transitive
++    description:
++      name: shared_preferences_linux
++      sha256: "580abfd40f415611503cae30adf626e6656dfb2f0cee8f465ece7b6defb40f2f"
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.4.1"
++  shared_preferences_platform_interface:
++    dependency: transitive
++    description:
++      name: shared_preferences_platform_interface
++      sha256: "57cbf196c486bc2cf1f02b85784932c6094376284b3ad5779d1b1c6c6a816b80"
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.4.1"
++  shared_preferences_web:
++    dependency: transitive
++    description:
++      name: shared_preferences_web
++      sha256: c49bd060261c9a3f0ff445892695d6212ff603ef3115edbb448509d407600019
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.4.3"
++  shared_preferences_windows:
++    dependency: transitive
++    description:
++      name: shared_preferences_windows
++      sha256: "94ef0f72b2d71bc3e700e025db3710911bd51a71cefb65cc609dd0d9a982e3c1"
++      url: "https://pub.dev"
++    source: hosted
++    version: "2.4.1"
+   sky_engine:
+     dependency: transitive
+     description: flutter
+@@ -272,6 +389,14 @@
+       url: "https://pub.dev"
+     source: hosted
+     version: "1.1.1"
++  xdg_directories:
++    dependency: transitive
++    description:
++      name: xdg_directories
++      sha256: "7a3f37b05d989967cdddcbb571f1ea834867ae2faa29725fd085180e0883aa15"
++      url: "https://pub.dev"
++    source: hosted
++    version: "1.1.0"
+ sdks:
+   dart: ">=3.9.2 <4.0.0"
+-  flutter: ">=3.18.0-18.0.pre.54"
++  flutter: ">=3.35.0"
+Index: lib/ui/room_page/devices_view_model.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/ui/room_page/devices_view_model.dart b/lib/ui/devices_screen/devices_view_model.dart
+rename from lib/ui/room_page/devices_view_model.dart
+rename to lib/ui/devices_screen/devices_view_model.dart
+--- a/lib/ui/room_page/devices_view_model.dart	(revision a5ea87507a6252b7e0348c5da0315b01f589ce82)
++++ b/lib/ui/devices_screen/devices_view_model.dart	(date 1761662176733)
+@@ -1,5 +1,5 @@
+ import 'package:flutter/material.dart';
+-import 'package:num_1_test/ui/room_page/devices_model.dart';
++import 'package:num_1_test/ui/devices_screen/devices_model.dart';
+ 
+ class DevicesViewModel extends ChangeNotifier {
+   // List các thiết bị tạo sẵn
+Index: lib/ui/home_screen/room_card.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/ui/home_screen/room_card.dart b/lib/ui/home_screen/room_card.dart
+new file mode 100644
+--- /dev/null	(date 1761662176734)
++++ b/lib/ui/home_screen/room_card.dart	(date 1761662176734)
+@@ -0,0 +1,131 @@
++import 'package:flutter/material.dart';
++
++class RoomCard extends StatefulWidget {
++  final String title;
++  final String imagePath;
++  final int deviceCount;
++  final bool initialState;
++  final Function()? onTap;
++  final Function()? onLongPress;
++  final Function()? onDoubleTap;
++
++  const RoomCard({
++    super.key,
++    required this.title,
++    required this.imagePath,
++    required this.deviceCount,
++    this.initialState = false,
++    this.onTap,
++    this.onLongPress,
++    this.onDoubleTap,
++  });
++
++  @override
++  State<RoomCard> createState() => _RoomCardState();
++}
++
++class _RoomCardState extends State<RoomCard> {
++  bool state = false;
++  bool isPress = false;
++  bool isLongPress = false;
++
++  @override
++  void initState() {
++    super.initState();
++    state = widget.initialState;
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    return InkWell(
++      onLongPress: () {
++        setState(() {
++          isLongPress = true; // tạm thời đổi màu khi giữ lâu
++        });
++
++        // Gọi hàm xóa từ widget cha (HomeScreen)
++        widget.onLongPress?.call();
++
++        // Sau một chút thì trở lại màu ban đầu (hiệu ứng nhấn)
++        Future.delayed(const Duration(milliseconds: 300), () {
++          if (mounted) {
++            setState(() {
++              isLongPress = false;
++            });
++          }
++        });
++      },
++
++      onDoubleTap: () {
++        setState(() {
++          isPress = true;
++        });
++
++        Future.delayed(const Duration(milliseconds: 300), () {
++          setState(() {
++            isPress = false;
++            state = !state;
++          });
++        });
++
++        widget.onDoubleTap?.call(); // Gọi callback từ HomeScreen
++      },
++
++      onTap: widget.onTap,
++
++      child: AnimatedContainer(
++        duration: const Duration(milliseconds: 150),
++        decoration: BoxDecoration(
++          color: isPress ? Colors.blue : Colors.black,
++          borderRadius: BorderRadius.circular(20),
++          border: Border.all(color: Colors.white60, width: 3),
++        ),
++        child: Column(
++          mainAxisAlignment: MainAxisAlignment.spaceBetween,
++          crossAxisAlignment: CrossAxisAlignment.center,
++          children: [
++            // Padding(padding: EdgeInsets.all(15)),
++            Image.asset(widget.imagePath),
++            Padding(
++              padding: EdgeInsets.all(0),
++              child: Text(
++                widget.title,
++                style: TextStyle(
++                  fontSize: 20,
++                  color: Colors.white70,
++                  fontWeight: FontWeight.bold,
++                ),
++              ),
++            ),
++            Row(
++              mainAxisAlignment: MainAxisAlignment.spaceAround,
++              children: [
++                Text(
++                  'Devices: 4', // 4 là số lượng thiết bị hiện có
++                  style: TextStyle(
++                    fontSize: 16,
++                    color: Colors.white70,
++                    fontWeight: FontWeight.bold,
++                  ),
++                ),
++                Text(
++                  state
++                      ? 'Activate'
++                      : 'Deactivate', // tắt đèn thì chuyển màu và ngc lại
++                  style: TextStyle(
++                    fontSize: 16,
++                    color: state
++                        ? Colors.green
++                        : Colors.red, // đổi màu để tắt hết đèn
++                    fontWeight: FontWeight.bold,
++                  ),
++                ),
++              ],
++            ),
++            const Padding(padding: EdgeInsets.all(5)),
++          ],
++        ),
++      ),
++    );
++  }
++}
+Index: lib/routing/app_routes_example.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/routing/app_routes_example.dart b/lib/routing/app_routes_example.dart
+new file mode 100644
+--- /dev/null	(date 1761662176732)
++++ b/lib/routing/app_routes_example.dart	(date 1761662176732)
+@@ -0,0 +1,6 @@
++
++class AppRoutes {
++  static const login = '/login';
++  static const home = '/home';
++  static const configRoom = '/config-room'; // <-- thêm
++}
+Index: lib/routing/app_router_config_example.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/routing/app_router_config_example.dart b/lib/routing/app_router_config_example.dart
+new file mode 100644
+--- /dev/null	(date 1761662176732)
++++ b/lib/routing/app_router_config_example.dart	(date 1761662176732)
+@@ -0,0 +1,12 @@
++import 'package:flutter/material.dart';
++import 'package:num_1_test/ui/config_screen/config_room_card.dart';
++import 'app_routes.dart';
++
++Route<dynamic>? onGenerateRoute(RouteSettings settings) {
++  switch (settings.name) {
++    case AppRoutes.configRoom:
++      return MaterialPageRoute(builder: (_) => const ConfigRoomCard());
++    default:
++      return null;
++  }
++}
+Index: macos/Flutter/GeneratedPluginRegistrant.swift
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>//\r\n//  Generated file. Do not edit.\r\n//\r\n\r\nimport FlutterMacOS\r\nimport Foundation\r\n\r\n\r\nfunc RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/macos/Flutter/GeneratedPluginRegistrant.swift b/macos/Flutter/GeneratedPluginRegistrant.swift
+--- a/macos/Flutter/GeneratedPluginRegistrant.swift	(revision a5ea87507a6252b7e0348c5da0315b01f589ce82)
++++ b/macos/Flutter/GeneratedPluginRegistrant.swift	(date 1761662348103)
+@@ -5,6 +5,8 @@
+ import FlutterMacOS
+ import Foundation
+ 
++import shared_preferences_foundation
+ 
+ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
++  SharedPreferencesPlugin.register(with: registry.registrar(forPlugin: "SharedPreferencesPlugin"))
+ }
+Index: lib/models/room.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/models/room.dart b/lib/models/room.dart
+new file mode 100644
+--- /dev/null	(date 1761662176731)
++++ b/lib/models/room.dart	(date 1761662176731)
+@@ -0,0 +1,59 @@
++
++import 'dart:convert';
++
++class Room {
++  final String id;
++  final String title;
++  final String imagePath;
++  final int deviceCount;
++  final bool initialState;
++
++  const Room({
++    required this.id,
++    required this.title,
++    required this.imagePath,
++    required this.deviceCount,
++    this.initialState = false,
++  });
++
++  Room copyWith({
++    String? id,
++    String? title,
++    String? imagePath,
++    int? deviceCount,
++    bool? initialState,
++  }) {
++    return Room(
++      id: id ?? this.id,
++      title: title ?? this.title,
++      imagePath: imagePath ?? this.imagePath,
++      deviceCount: deviceCount ?? this.deviceCount,
++      initialState: initialState ?? this.initialState,
++    );
++  }
++
++  factory Room.fromJson(Map<String, dynamic> json) => Room(
++        id: json['id'] as String,
++        title: json['title'] as String,
++        imagePath: json['imagePath'] as String,
++        deviceCount: json['deviceCount'] as int,
++        initialState: json['initialState'] as bool? ?? false,
++      );
++
++  Map<String, dynamic> toJson() => {
++        'id': id,
++        'title': title,
++        'imagePath': imagePath,
++        'deviceCount': deviceCount,
++        'initialState': initialState,
++      };
++
++  static List<Room> listFromJsonString(String source) {
++    final list = jsonDecode(source) as List<dynamic>;
++    return list.map((e) => Room.fromJson(e as Map<String, dynamic>)).toList();
++  }
++
++  static String listToJsonString(List<Room> rooms) {
++    return jsonEncode(rooms.map((e) => e.toJson()).toList());
++  }
++}
+Index: lib/state/room_provider.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/state/room_provider.dart b/lib/state/room_provider.dart
+new file mode 100644
+--- /dev/null	(date 1761662176733)
++++ b/lib/state/room_provider.dart	(date 1761662176733)
+@@ -0,0 +1,114 @@
++import 'dart:collection';
++import 'package:flutter/foundation.dart';
++import 'package:shared_preferences/shared_preferences.dart';
++import '../models/room.dart';
++
++List<Room> myRoomAtStart = [
++  Room(
++    id: '001',
++    title: 'Living Room',
++    imagePath: 'assets/images/living_room.png',
++    deviceCount: 4,
++  ),
++  Room(
++    id: '002',
++    title: 'Bed Room',
++    imagePath: 'assets/images/bed_room.png',
++    deviceCount: 4,
++  ),
++  Room(
++    id: '003',
++    title: 'Kitchen',
++    imagePath: 'assets/images/kitchen.png',
++    deviceCount: 4,
++  ),
++];
++
++class RoomProvider extends ChangeNotifier {
++  static const _storageKey = 'rooms_v1';
++  final List<Room> _rooms = [];
++
++  UnmodifiableListView<Room> get rooms => UnmodifiableListView(_rooms);
++
++  Future<void> load() async {
++    final prefs = await SharedPreferences.getInstance();
++    final raw = prefs.getString(_storageKey);
++    if (raw != null && raw.isNotEmpty) {
++      try {
++        final data = Room.listFromJsonString(raw);
++        _rooms
++          ..clear()
++          ..addAll(data);
++        notifyListeners();
++      } catch (e) {
++        if (kDebugMode) {
++          print('RoomProvider.load error: $e');
++        }
++      }
++    }
++
++    // ----- test cho dễ hiểu => khi chạy thực tế thì comment lại -----
++    if (_rooms.isEmpty) {
++      // Nếu danh sách phòng trống -> nạp lại 3 phòng mặc định
++      _rooms.addAll([
++        Room(
++          id: '001',
++          title: 'Living Room',
++          imagePath: 'assets/images/living_room.png',
++          deviceCount: 4,
++        ),
++        Room(
++          id: '002',
++          title: 'Bed Room',
++          imagePath: 'assets/images/bed_room.png',
++          deviceCount: 4,
++        ),
++        Room(
++          id: '003',
++          title: 'Kitchen',
++          imagePath: 'assets/images/kitchen.png',
++          deviceCount: 4,
++        ),
++      ]);
++
++      await _persistSafe(); // lưu lại mặc định
++      notifyListeners();
++    }
++    // ----- comment lại -----
++  }
++
++  Future<void> add(Room room) async {
++    // _rooms.add(room);
++    // await _persist();
++    // notifyListeners();
++    _rooms.add(room);
++    notifyListeners(); // cập nhật UI ngay nếu bỏ await đi
++    _persistSafe(); // lưu nền, không chặn UI
++  }
++
++  Future<void> removeById(String id) async {
++    _rooms.removeWhere((r) => r.id == id);
++    // await _persist();
++    notifyListeners();
++    _persistSafe(); // lưu nền, không chặn UI
++  }
++
++  Future<void> update(Room room) async {
++    final idx = _rooms.indexWhere((r) => r.id == room.id);
++    if (idx != -1) {
++      _rooms[idx] = room;
++      // await _persist();
++      notifyListeners();
++      _persistSafe(); // lưu nền, không chặn UI
++    }
++  }
++
++  Future<void> _persistSafe() async {
++    try {
++      final prefs = await SharedPreferences.getInstance();
++      await prefs.setString(_storageKey, Room.listToJsonString(_rooms));
++    } catch (e) {
++      if (kDebugMode) print('RoomProvider persist error: $e');
++    }
++  }
++}
+Index: lib/ui/room_page/living_room/living_room.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/ui/room_page/living_room/living_room.dart b/lib/ui/room_screen/living_room/living_room.dart
+rename from lib/ui/room_page/living_room/living_room.dart
+rename to lib/ui/room_screen/living_room/living_room.dart
+--- a/lib/ui/room_page/living_room/living_room.dart	(revision a5ea87507a6252b7e0348c5da0315b01f589ce82)
++++ b/lib/ui/room_screen/living_room/living_room.dart	(date 1761662176735)
+@@ -1,6 +1,6 @@
+ import 'package:flutter/material.dart';
+ import 'package:provider/provider.dart';
+-import 'package:num_1_test/ui/room_page/devices_view_model.dart';
++import 'package:num_1_test/ui/devices_screen/devices_view_model.dart';
+ 
+ class LivingRoom extends StatefulWidget {
+   const LivingRoom({super.key});
+@@ -96,16 +96,23 @@
+                 itemBuilder: (context, index) {
+                   final device = viewModel.device[index];
+                   return InkWell(
++                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                     onTap: () {
+                       setState(() {
+                         count = index;
+                         isOnTap = true;
+                       });
+                     },
++
+                     child: Card(
+                       shape: RoundedRectangleBorder(
+                         borderRadius: BorderRadius.all(Radius.circular(20)),
+-                        side: BorderSide(color: Colors.white60, width: 3),
++                        side: BorderSide(
++                          color: (count == index)
++                              ? Colors.blue
++                              : Colors.white60,
++                          width: (count == index) ? 5 : 3,
++                        ),
+                       ),
+                       child: ListTile(
+                         leading: Image.asset(
+@@ -151,21 +158,21 @@
+ 
+ class _DeviceInfoState extends State<DeviceInfo> {
+   int get _count => widget.indexCounter;
+-  // bool isOn => widget.
+ 
+   @override
+   Widget build(BuildContext context) {
+     final viewModel = Provider.of<DevicesViewModel>(context);
++    String icon = (viewModel.device[_count].isOn)
++        ? "${viewModel.device[_count].pathImageName}_on.gif"
++        : "${viewModel.device[_count].pathImageName}.png";
++
+     return Expanded(
+       flex: 2,
+       child: Column(
+         children: [
+           Expanded(
+             flex: 2,
+-            child: Image.asset(
+-              'assets/images/${viewModel.device[_count].pathImageName}.png',
+-              scale: .5,
+-            ),
++            child: Image.asset('assets/images/$icon' /* , scale: .5 */),
+           ),
+           Expanded(
+             child: Text(
+@@ -191,7 +198,7 @@
+                 Expanded(
+                   flex: 1,
+                   child: Center(
+-                    child: Text('Current: ${viewModel.device[_count].current}'),
++                    child: Text('Power: ${viewModel.device[_count].power}'),
+                   ),
+                 ),
+               ],
+Index: lib/ui/config_screen/config_room_card.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/ui/config_screen/config_room_card.dart b/lib/ui/config_screen/config_room_card.dart
+new file mode 100644
+--- /dev/null	(date 1761662176733)
++++ b/lib/ui/config_screen/config_room_card.dart	(date 1761662176733)
+@@ -0,0 +1,145 @@
++import 'package:flutter/material.dart';
++import 'package:num_1_test/models/room.dart';
++
++class ConfigRoomCard extends StatefulWidget {
++  const ConfigRoomCard({super.key});
++
++  @override
++  State<ConfigRoomCard> createState() => _ConfigRoomCardState();
++}
++
++class _ConfigRoomCardState extends State<ConfigRoomCard> {
++  final _formKey = GlobalKey<FormState>();
++  final _titleCtrl = TextEditingController();
++  final _deviceCountCtrl = TextEditingController(text: '0');
++  bool _initialState = false;
++
++  final List<String> _assetOptions = <String>[
++    'assets/images/living_room.png',
++    'assets/images/bed_room.png',
++    'assets/images/kitchen.png',
++    'assets/images/garage.png',
++    'assets/images/garden.png',
++    'assets/images/redding.png',
++  ];
++  String? _selectedImage;
++
++  @override
++  void initState() {
++    super.initState();
++    _selectedImage = _assetOptions.first;
++  }
++
++  @override
++  void dispose() {
++    _titleCtrl.dispose();
++    _deviceCountCtrl.dispose();
++    super.dispose();
++  }
++
++  void _save() {
++    if (!_formKey.currentState!.validate()) return;
++    final deviceCount = int.tryParse(_deviceCountCtrl.text) ?? 0;
++
++    final room = Room(
++      id: DateTime.now().millisecondsSinceEpoch.toString(),
++      title: _titleCtrl.text.trim(),
++      imagePath: _selectedImage!,
++      deviceCount: deviceCount,
++      initialState: _initialState,
++    );
++
++    Navigator.of(context).pop(room);
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    return Scaffold(
++      appBar: AppBar(title: const Text('Thêm phòng')),
++      body: Padding(
++        padding: const EdgeInsets.all(16.0),
++        child: Form(
++          key: _formKey,
++          child: Column(
++            crossAxisAlignment: CrossAxisAlignment.start,
++            children: [
++              TextFormField(
++                controller: _titleCtrl,
++                decoration: const InputDecoration(
++                  labelText: 'Tên phòng',
++                  hintText: 'VD: Living Room',
++                  border: OutlineInputBorder(),
++                ),
++                validator: (v) {
++                  if (v == null || v.trim().isEmpty) {
++                    return 'Vui lòng nhập tên phòng';
++                  }
++                  return null;
++                },
++              ),
++              const SizedBox(height: 12),
++              TextFormField(
++                controller: _deviceCountCtrl,
++                decoration: const InputDecoration(
++                  labelText: 'Số thiết bị',
++                  border: OutlineInputBorder(),
++                ),
++                keyboardType: TextInputType.number,
++                validator: (v) {
++                  if (v == null || v.isEmpty) return 'Nhập số thiết bị';
++                  final n = int.tryParse(v);
++                  if (n == null || n < 0) return 'Giá trị không hợp lệ';
++                  return null;
++                },
++              ),
++              const SizedBox(height: 12),
++              InputDecorator(
++                decoration: const InputDecoration(
++                  labelText: 'Ảnh (asset)',
++                  border: OutlineInputBorder(),
++                ),
++                // ----
++                child: DropdownButtonHideUnderline(
++                  child: DropdownButton<String>(
++                    dropdownColor: Colors.black,
++                    value: _selectedImage,
++                    isExpanded: true,
++                    items: _assetOptions
++                        .map((p) => DropdownMenuItem(value: p, child: Text(p)))
++                        .toList(),
++                    onChanged: (v) => setState(() => _selectedImage = v),
++                  ),
++                ),
++              ),
++              const SizedBox(height: 12),
++              SwitchListTile(
++                title: const Text('Bật trạng thái ban đầu'),
++                value: _initialState,
++                onChanged: (v) => setState(() => _initialState = v),
++              ),
++              const Spacer(),
++              Row(
++                children: [
++                  Expanded(
++                    child: OutlinedButton(
++                      onPressed: () => Navigator.of(context).maybePop(),
++                      child: const Text('Hủy'),
++                    ),
++                  ),
++                  const SizedBox(width: 12),
++                  Expanded(
++                    child: ElevatedButton.icon(
++                      onPressed: _save,
++                      icon: const Icon(Icons.check),
++                      label: const Text('Lưu'),
++                    ),
++                  ),
++                ],
++              ),
++            ],
++          ),
++        ),
++      ),
++    );
++  }
++}
+Index: lib/my_app.dart
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/lib/my_app.dart b/lib/my_app.dart
+new file mode 100644
+--- /dev/null	(date 1761662176731)
++++ b/lib/my_app.dart	(date 1761662176731)
+@@ -0,0 +1,75 @@
++import 'package:flutter/material.dart';
++
++import 'routing/app_router.dart';
++import 'routing/app_routes.dart';
++import 'ui/login/login_screen.dart';
++
++class MyApp extends StatelessWidget {
++  const MyApp({super.key});
++
++  @override
++  Widget build(BuildContext context) {
++    final colorScheme = Theme.of(context).colorScheme;
++
++    return MaterialApp(
++      onGenerateRoute: onGenerateRoute, // <- dùng router tự viết
++      initialRoute: AppRoutes.login, // <- trang bắt đầu
++      title: 'Flutter Demo',
++      debugShowCheckedModeBanner: false,
++      theme: ThemeData(
++        appBarTheme: const AppBarTheme(
++          backgroundColor: Color(0xFF303030), // màu nền
++          foregroundColor: Colors.white, // màu chữ và icon
++          elevation: 0,
++          centerTitle: true, // căn giữa tiêu đề
++          toolbarHeight: 80, // độ cao
++          titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
++        ),
++        fontFamily: 'Poppins',
++        colorScheme: ColorScheme.fromSeed(
++          seedColor: Colors.blueGrey,
++          brightness: Brightness.light,
++        ),
++        scaffoldBackgroundColor: Color(0xFF303030),
++        textTheme: ThemeData.light().textTheme.apply(
++          bodyColor: Colors.white,
++          displayColor: Colors.white,
++          decorationColor: Colors.white,
++        ),
++        floatingActionButtonTheme: FloatingActionButtonThemeData(
++          extendedPadding: EdgeInsetsGeometry.all(17),
++          backgroundColor: Color(0xFF303030),
++          foregroundColor: Colors.white,
++          hoverColor: Colors.blue,
++          hoverElevation: 50,
++          elevation: 0,
++          focusColor: Colors.white70,
++          focusElevation: 3,
++          shape: RoundedRectangleBorder(
++            borderRadius: BorderRadius.circular(21),
++            side: BorderSide(color: Colors.white, width: 3),
++          ),
++        ),
++        elevatedButtonTheme: ElevatedButtonThemeData(
++          style: ElevatedButton.styleFrom(
++            backgroundColor: colorScheme.onSurface,
++            foregroundColor: colorScheme.surface,
++            shape: RoundedRectangleBorder(
++              borderRadius: BorderRadius.circular(45),
++              side: BorderSide(color: Colors.white, width: 3),
++            ),
++          ),
++        ),
++        listTileTheme: ListTileThemeData(
++          tileColor: Colors.black,
++          textColor: Colors.white,
++          shape: RoundedRectangleBorder(
++            borderRadius: BorderRadius.all(Radius.circular(20)),
++            side: BorderSide(color: Colors.white60, width: 3),
++          ),
++        ),
++      ),
++      // home: const LoginScreen(),
++    );
++  }
++}
+Index: pubspec.yaml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>name: num_1_test\r\ndescription: \"A new Flutter project.\"\r\n# The following line prevents the package from being accidentally published to\r\n# pub.dev using `flutter pub publish`. This is preferred for private packages.\r\npublish_to: \"none\" # Remove this line if you wish to publish to pub.dev\r\n\r\n# The following defines the version and build number for your application.\r\n# A version number is three numbers separated by dots, like 1.2.43\r\n# followed by an optional build number separated by a +.\r\n# Both the version and the builder number may be overridden in flutter\r\n# build by specifying --build-name and --build-number, respectively.\r\n# In Android, build-name is used as versionName while build-number used as versionCode.\r\n# Read more about Android versioning at https://developer.android.com/studio/publish/versioning\r\n# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.\r\n# Read more about iOS versioning at\r\n# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html\r\n# In Windows, build-name is used as the major, minor, and patch parts\r\n# of the product and file versions while build-number is used as the build suffix.\r\nversion: 1.0.0+1\r\n\r\nenvironment:\r\n  sdk: ^3.9.2\r\n\r\n# Dependencies specify other packages that your package needs in order to work.\r\n# To automatically upgrade your package dependencies to the latest versions\r\n# consider running `flutter pub upgrade --major-versions`. Alternatively,\r\n# dependencies can be manually updated by changing the version numbers below to\r\n# the latest version available on pub.dev. To see which dependencies have newer\r\n# versions available, run `flutter pub outdated`.\r\ndependencies:\r\n  flutter:\r\n    sdk: flutter\r\n\r\n  # The following adds the Cupertino Icons font to your application.\r\n  # Use with the CupertinoIcons class for iOS style icons.\r\n  cupertino_icons: ^1.0.8\r\n  http: ^1.5.0\r\n\r\ndev_dependencies:\r\n  flutter_test:\r\n    sdk: flutter\r\n\r\n  # The \"flutter_lints\" package below contains a set of recommended lints to\r\n  # encourage good coding practices. The lint set provided by the package is\r\n  # activated in the `analysis_options.yaml` file located at the root of your\r\n  # package. See that file for information about deactivating specific lint\r\n  # rules and activating additional ones.\r\n  flutter_lints: ^5.0.0\r\n  flutter_bloc: ^9.1.1\r\n  provider: ^6.1.4\r\n\r\n# For information on the generic Dart part of this file, see the\r\n# following page: https://dart.dev/tools/pub/pubspec\r\n\r\n# The following section is specific to Flutter packages.\r\nflutter:\r\n  # The following line ensures that the Material Icons font is\r\n  # included with your application, so that you can use the icons in\r\n  # the material Icons class.\r\n  uses-material-design: true\r\n\r\n  # To add assets to your application, add an assets section, like this:\r\n  assets:\r\n    - assets/images/\r\n\r\n  # An image asset can refer to one or more resolution-specific \"variants\", see\r\n  # https://flutter.dev/to/resolution-aware-images\r\n\r\n  # For details regarding adding assets from package dependencies, see\r\n  # https://flutter.dev/to/asset-from-package\r\n\r\n  # To add custom fonts to your application, add a fonts section here,\r\n  # in this \"flutter\" section. Each entry in this list should have a\r\n  # \"family\" key with the font family name, and a \"fonts\" key with a\r\n  # list giving the asset and other descriptors for the font. For\r\n  # example:\r\n  fonts:\r\n    - family: Poppins\r\n      fonts:\r\n        - asset: assets/fonts/PoppinsRegular.ttf\r\n          weight: 400\r\n        - asset: assets/fonts/PoppinsSemiBold.ttf\r\n          weight: 600\r\n        - asset: assets/fonts/PoppinsMedium.ttf\r\n          weight: 500\r\n  #   - family: Trajan Pro\r\n  #     fonts:\r\n  #       - asset: fonts/TrajanPro.ttf\r\n  #       - asset: fonts/TrajanPro_Bold.ttf\r\n  #         weight: 700\r\n  #\r\n  # For details regarding fonts from package dependencies,\r\n  # see https://flutter.dev/to/font-from-package\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pubspec.yaml b/pubspec.yaml
+--- a/pubspec.yaml	(revision a5ea87507a6252b7e0348c5da0315b01f589ce82)
++++ b/pubspec.yaml	(date 1761662176736)
+@@ -35,6 +35,8 @@
+   # Use with the CupertinoIcons class for iOS style icons.
+   cupertino_icons: ^1.0.8
+   http: ^1.5.0
++  provider: ^6.1.5+1
++  shared_preferences: ^2.5.3
+ 
+ dev_dependencies:
+   flutter_test:
+@@ -47,7 +49,6 @@
+   # rules and activating additional ones.
+   flutter_lints: ^5.0.0
+   flutter_bloc: ^9.1.1
+-  provider: ^6.1.4
+ 
+ # For information on the generic Dart part of this file, see the
+ # following page: https://dart.dev/tools/pub/pubspec
+diff --git a/lib/ui/room_page/devices_model.dart b/lib/ui/devices_screen/devices_model.dart
+rename from lib/ui/room_page/devices_model.dart
+rename to lib/ui/devices_screen/devices_model.dart
