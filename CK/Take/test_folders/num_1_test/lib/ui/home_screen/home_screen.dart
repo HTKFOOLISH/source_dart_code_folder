@@ -3,7 +3,9 @@ import 'package:num_1_test/models/room.dart';
 import 'package:num_1_test/routing/app_routes.dart';
 import 'package:num_1_test/state/room_provider.dart';
 import 'package:num_1_test/ui/config_screen/config_room_card.dart';
+// import 'package:num_1_test/ui/devices_screen/devices_model.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import '../../models/room.dart';
 // import '../../state/room_provider.dart';
 // import '../config_screen/config_room_card.dart';
@@ -71,17 +73,17 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
         ],
-        leading: BackButton(
-          onPressed: () => {
-            Navigator.popAndPushNamed(context, AppRoutes.login),
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('You\'ve just logout'),
-                duration: Duration(milliseconds: 200),
-              ),
-            ),
-          },
-        ),
+        // leading: BackButton(
+        //   onPressed: () => {
+        //     Navigator.popAndPushNamed(context, AppRoutes.login),
+        //     ScaffoldMessenger.of(context).showSnackBar(
+        //       SnackBar(
+        //         content: const Text('You\'ve just logout'),
+        //         duration: Duration(seconds: 2),
+        //       ),
+        //     ),
+        //   },
+        // ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _onAddRoom(context),
@@ -117,26 +119,37 @@ class _HomeScreenState extends State<HomeScreen>
                       imagePath: r.imagePath,
                       deviceCount: r.deviceCount,
                       initialState: r.initialState,
+
+                      onTap: () {
+                        // Điều hướng tới trang hiển thị thiết bị của phòng
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes
+                              .livingRoom, // chưa thay đổi dữ liệu theo từng phòng
+                          arguments: r, // truyền dữ liệu phòng qua
+                        );
+                      },
+
                       onLongPress: () async {
                         final shouldDelete = await showDialog<bool>(
                           context: context,
                           builder: (context) {
                             return AlertDialog(
                               backgroundColor: Colors.black,
-                              title: const Text('Xác nhận xóa phòng'),
+                              title: const Text('Confirm Delete Room'),
                               content: Text(
-                                'Bạn có chắc chắn muốn xóa "${r.title}" không?',
+                                'Are you sure you want to delete the "${r.title}\'room"?\nThis action will deleting all devices in this room!',
                               ),
                               actions: [
                                 TextButton(
                                   onPressed: () =>
                                       Navigator.pop(context, false),
-                                  child: const Text('Hủy'),
+                                  child: const Text('Cancel'),
                                 ),
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, true),
                                   child: const Text(
-                                    'Xóa',
+                                    'Delete',
                                     style: TextStyle(color: Colors.red),
                                   ),
                                 ),
@@ -149,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen>
                           context.read<RoomProvider>().removeById(r.id);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Đã xóa phòng "${r.title}"'),
+                              content: Text('Deleted "${r.title}"'),
                               duration: const Duration(seconds: 2),
                             ),
                           );
@@ -180,28 +193,91 @@ class ShowIconOptions extends StatefulWidget {
 }
 
 class _ShowIconOptionsState extends State<ShowIconOptions> {
+  Future<void> _showLogoutDialog(BuildContext context) async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.black,
+          title: const Text(
+            'Confirm logout',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            'Are you sure you want to sign out?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                'Sign out',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Nếu người dùng chọn "Đăng xuất"
+    if (shouldLogout == true && context.mounted) {
+      // GỌI XOÁ DỮ LIỆU SharedPreferences cho từng trường dữ liệu
+      final prefs = await SharedPreferences.getInstance();
+
+      // Xoá thông tin đăng nhập
+      await prefs.remove('username'); // xoá key username
+      await prefs.remove('password'); // xoá key password
+
+      // Xóa toàn bộ danh sách phòng đã thêm
+      // await prefs.remove('rooms_v1');
+
+      // Xóa toàn bộ thiết bị trong các phòng
+      final keys = prefs.getKeys().where((key) => key.startsWith('devices_'));
+      for (var key in keys) {
+        await prefs.remove(key);
+      }
+
+      // HOẶC XOÁ TOÀN BỘ các trường dữ liệu đã từng nhập
+      // await prefs.clear();
+
+      // Xoá danh sách phòng trong bộ nhớ RAM
+      if (context.mounted) {
+        final roomProvider = context.read<RoomProvider>();
+        await roomProvider.resetToDefault();
+      }
+
+      // Quay lại màn hình login
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
+
+      // Hiển thị dòng chữ thông báo đăng xuất thành công
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You are logged out!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Positioned(
       right: 5,
       child: Card(
         elevation: 5,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadiusGeometry.circular(15),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: Column(
           children: [
-            IconButton(onPressed: () {}, icon: Icon(Icons.settings)),
-            IconButton(onPressed: () {}, icon: Icon(Icons.info)),
+            // IconButton(onPressed: () {}, icon: const Icon(Icons.settings)),
+            IconButton(onPressed: () {}, icon: const Icon(Icons.info)),
             IconButton(
-              onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  AppRoutes.login,
-                  (_) => false,
-                );
-              },
-              icon: Icon(Icons.logout),
+              onPressed: () => _showLogoutDialog(context),
+              icon: const Icon(Icons.logout),
             ),
           ],
         ),

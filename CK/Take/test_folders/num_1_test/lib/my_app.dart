@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'routing/app_router.dart';
 import 'routing/app_routes.dart';
-import 'ui/login/login_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -69,7 +68,6 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      // home: const LoginScreen(),
     );
   }
 }

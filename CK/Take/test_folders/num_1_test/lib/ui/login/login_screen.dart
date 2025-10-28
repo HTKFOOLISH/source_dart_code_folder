@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../routing/app_routes.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -32,11 +33,20 @@ class _LoginScreenState extends State<LoginScreen> {
     final passEmpty = _passwordController.text.isEmpty;
 
     if (!userEmpty && !passEmpty) {
+      // Lưu username và password
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('username', _usernameController.text.trim());
+      await prefs.setString('password', _passwordController.text);
+
       await Future.delayed(const Duration(milliseconds: 500));
 
       // TODO: Trỏ tới trang home_screen (all room)
       // Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-      Navigator.pushNamed(context, AppRoutes.home);
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.home,
+        (route) => false,
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -53,6 +63,26 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordFocus.requestFocus();
       }
     }
+  }
+
+  // ----- TỰ ĐỘNG ĐIỀN THÔNG TIN KHI MỞ APP -----
+
+  // đọc lại dữ liệu đã lưu trong initState()
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedData();
+  }
+
+  void _loadSavedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedUser = prefs.getString('username') ?? '';
+    final savedPass = prefs.getString('password') ?? '';
+
+    setState(() {
+      _usernameController.text = savedUser;
+      _passwordController.text = savedPass;
+    });
   }
 
   @override

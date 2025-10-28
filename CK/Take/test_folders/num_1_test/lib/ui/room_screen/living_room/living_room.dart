@@ -1,9 +1,33 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:num_1_test/ui/home_screen/home_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:num_1_test/models/room.dart';
 import 'package:num_1_test/ui/devices_screen/devices_view_model.dart';
+import 'package:num_1_test/ui/devices_screen/devices_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class LivingRoomRoomArgs extends StatelessWidget {
+  const LivingRoomRoomArgs({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+
+    if (args is Room) {
+      return LivingRoom(room: args);
+    } else {
+      return const Scaffold(
+        body: Center(child: Text('Không có dữ liệu phòng được truyền vào.')),
+      );
+    }
+  }
+}
 
 class LivingRoom extends StatefulWidget {
-  const LivingRoom({super.key});
+  final Room room;
+  const LivingRoom({super.key, required this.room});
 
   @override
   State<StatefulWidget> createState() => LivingRoomState();
@@ -12,6 +36,10 @@ class LivingRoom extends StatefulWidget {
 class LivingRoomState extends State<LivingRoom>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  late Room room; // Nhận dữ liệu phòng
+
+  bool isToggle = false;
+  bool isShowIconMenu = false;
 
   @override
   void initState() {
@@ -20,6 +48,16 @@ class LivingRoomState extends State<LivingRoom>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+
+    room = widget.room;
+  }
+
+  void _toggleMenu() {
+    setState(() {
+      isToggle = !isToggle;
+      isShowIconMenu = !isShowIconMenu;
+      isToggle ? _controller.forward() : _controller.reverse();
+    });
   }
 
   @override
@@ -30,42 +68,41 @@ class LivingRoomState extends State<LivingRoom>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Image.asset('assets/images/IoT_logo.png'),
-            const Padding(
-              padding: EdgeInsets.only(right: 18.0),
-              child: Text('Living Room'),
-            ),
-            IconButton(
-              onPressed: () {
-                if (_controller.status == AnimationStatus.completed) {
-                  _controller.reverse();
-                } else {
-                  _controller.forward();
-                }
-              },
-              icon: AnimatedIcon(
-                icon: AnimatedIcons.menu_arrow,
-                progress: _controller,
+    return ChangeNotifierProvider(
+      create: (_) => DevicesViewModel(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Image.asset('assets/images/IoT_logo.png', height: 55),
+              Text(room.title.isNotEmpty ? room.title : 'Loading...'),
+              IconButton(
+                onPressed: _toggleMenu,
+                icon: AnimatedIcon(
+                  icon: AnimatedIcons.menu_close,
+                  progress: _controller,
+                ),
               ),
-            ),
+            ],
+          ),
+        ),
+        body: Stack(
+          children: [
+            LivingRoomBodyScreen(roomId: room.id),
+
+            // Ẩn/Hiện menu trên thanh AppBar
+            if (isShowIconMenu) const ShowIconOptions(isShowMenu: true),
           ],
         ),
-      ),
-      body: ChangeNotifierProvider(
-        create: (_) => DevicesViewModel(),
-        child: LivingRoomBodyScreen(),
       ),
     );
   }
 }
 
 class LivingRoomBodyScreen extends StatefulWidget {
-  const LivingRoomBodyScreen({super.key});
+  final String roomId;
+  const LivingRoomBodyScreen({super.key, required this.roomId});
 
   @override
   State<StatefulWidget> createState() => _LivingRoomBodyScreenState();
@@ -74,6 +111,32 @@ class LivingRoomBodyScreen extends StatefulWidget {
 class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
   bool isOnTap = false;
   int count = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDevices(); // Khi vào trang thì load trạng thái đã lưu
+  }
+
+  Future<void> _loadDevices() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonData = prefs.getString('devices_${widget.roomId}');
+    if (jsonData != null) {
+      final decoded = jsonDecode(jsonData) as List;
+      final devices = decoded
+          .map((e) => Device.fromJson(e as Map<String, dynamic>))
+          .toList();
+      final viewModel = Provider.of<DevicesViewModel>(context, listen: false);
+      viewModel.device = devices;
+      viewModel.notifyListeners();
+    }
+  }
+
+  Future<void> _saveDevices(List<Device> devices) async {
+    final prefs = await SharedPreferences.getInstance();
+    final encoded = jsonEncode(devices.map((d) => d.toJson()).toList());
+    await prefs.setString('devices_${widget.roomId}', encoded);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +154,30 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
           flex: 3,
           child: Consumer<DevicesViewModel>(
             builder: (context, viewModel, _) {
+              // Kiểm tra nếu ban đầu chưa có thiết bị nào => có nút thêm thiết bị
+              if (viewModel.device.isEmpty) {
+                return Center(
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      viewModel.device.add(
+                        Device(
+                          name: 'New Device',
+                          pathImageName: 'default_device',
+                          isOn: false,
+                          voltage: 220,
+                          current: 0.0,
+                          power: 0.0,
+                        ),
+                      );
+                      viewModel.notifyListeners();
+                      await _saveDevices(viewModel.device); // Lưu sau khi thêm
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Thêm thiết bị mới'),
+                  ),
+                );
+              }
+
               return ListView.builder(
                 itemCount: viewModel.device.length,
                 itemBuilder: (context, index) {
@@ -128,11 +215,14 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
                         ),
                         trailing: Switch(
                           value: device.isOn,
-                          onChanged: (value) {
+                          onChanged: (value) async {
                             Provider.of<DevicesViewModel>(
                               context,
                               listen: false,
                             ).toggleDevice(device, value);
+                            await _saveDevices(
+                              viewModel.device,
+                            ); // Lưu lại khi bật/tắt
                           },
                         ),
                       ),
@@ -170,10 +260,7 @@ class _DeviceInfoState extends State<DeviceInfo> {
       flex: 2,
       child: Column(
         children: [
-          Expanded(
-            flex: 2,
-            child: Image.asset('assets/images/$icon' /* , scale: .5 */),
-          ),
+          Expanded(flex: 2, child: Image.asset('assets/images/$icon')),
           Expanded(
             child: Text(
               "${viewModel.device[_count].name} is ${(viewModel.device[_count].isOn) ? 'Turn On' : 'Turn Off'}",
