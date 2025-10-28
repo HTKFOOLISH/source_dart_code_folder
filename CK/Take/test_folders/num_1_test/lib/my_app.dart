@@ -1,3 +1,5 @@
+// my_app.dart
+
 import 'package:flutter/material.dart';
 
 import 'routing/app_router.dart';
@@ -8,7 +10,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    // ##### PHẦN SỬA #####
+    // Đã di chuyển colorScheme ra ngoài để dễ dùng
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: Colors.blueGrey,
+      brightness: Brightness.dark, // Đổi thành .dark để hợp với theme của bạn
+    );
 
     return MaterialApp(
       onGenerateRoute: onGenerateRoute, // <- dùng router tự viết
@@ -25,16 +32,16 @@ class MyApp extends StatelessWidget {
           titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
         ),
         fontFamily: 'Poppins',
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blueGrey,
-          brightness: Brightness.light,
-        ),
+        colorScheme: colorScheme, // Sử dụng colorScheme đã khai báo
         scaffoldBackgroundColor: Color(0xFF303030),
-        textTheme: ThemeData.light().textTheme.apply(
+        textTheme: ThemeData.dark().textTheme.apply( // Dùng ThemeData.dark()
           bodyColor: Colors.white,
           displayColor: Colors.white,
           decorationColor: Colors.white,
         ),
+
+        // ##### PHẦN SỬA #####
+        // floatingActionButtonTheme phải nằm TRONG ThemeData
         floatingActionButtonTheme: FloatingActionButtonThemeData(
           extendedPadding: EdgeInsetsGeometry.all(17),
           backgroundColor: Color(0xFF303030),
@@ -49,6 +56,8 @@ class MyApp extends StatelessWidget {
             side: BorderSide(color: Colors.white, width: 3),
           ),
         ),
+        // ##### KẾT THÚC PHẦN SỬA #####
+
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: colorScheme.onSurface,
@@ -67,7 +76,7 @@ class MyApp extends StatelessWidget {
             side: BorderSide(color: Colors.white60, width: 3),
           ),
         ),
-      ),
+      ), // <-- Dấu ')' này bị thiếu/thừa
     );
   }
 }

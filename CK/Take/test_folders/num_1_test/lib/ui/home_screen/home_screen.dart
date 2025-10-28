@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // import '../../state/room_provider.dart';
 // import '../config_screen/config_room_card.dart';
 import 'room_card.dart';
+import 'package:num_1_test/ui/widgets/show_icon_options.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -193,92 +194,92 @@ class _HomeScreenState extends State<HomeScreen>
   }
 }
 
-class ShowIconOptions extends StatefulWidget {
-  final bool isShowMenu;
-  const ShowIconOptions({super.key, required this.isShowMenu});
-
-  @override
-  State<ShowIconOptions> createState() => _ShowIconOptionsState();
-}
-
-class _ShowIconOptionsState extends State<ShowIconOptions> {
-  Future<void> _showLogoutDialog(BuildContext context) async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.black,
-          title: const Text(
-            'Confirm logout',
-            style: TextStyle(color: Colors.white),
-          ),
-          content: const Text(
-            'Are you sure you want to sign out?',
-            style: TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text(
-                'Sign out',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    // ##### PHẦN ĐÃ SỬA (Không xóa data khi logout) #####
-    if (shouldLogout == true && context.mounted) {
-      final prefs = await SharedPreferences.getInstance();
-
-      // Chỉ Xoá thông tin đăng nhập
-      await prefs.remove('username'); // xoá key username
-      await prefs.remove('password'); // xoá key password
-
-      // [ĐÃ SỬA] KHÔNG xoá dữ liệu thiết bị
-      // [ĐÃ SỬA] KHÔNG reset danh sách phòng
-
-      // Quay lại màn hình login
-      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
-
-      // Hiển thị dòng chữ thông báo đăng xuất thành công
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('You are logged out!'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
-    // ##### KẾT THÚC PHẦN SỬA #####
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      right: 5,
-      child: Card(
-        elevation: 5,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        child: Column(
-          children: [
-            // IconButton(onPressed: () {}, icon: const Icon(Icons.settings)),
-            IconButton(onPressed: () {}, icon: const Icon(Icons.info)),
-            IconButton(
-              onPressed: () => _showLogoutDialog(context),
-              icon: const Icon(Icons.logout),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// class ShowIconOptions extends StatefulWidget {
+//   final bool isShowMenu;
+//   const ShowIconOptions({super.key, required this.isShowMenu});
+//
+//   @override
+//   State<ShowIconOptions> createState() => _ShowIconOptionsState();
+// }
+//
+// class _ShowIconOptionsState extends State<ShowIconOptions> {
+//   Future<void> _showLogoutDialog(BuildContext context) async {
+//     final shouldLogout = await showDialog<bool>(
+//       context: context,
+//       builder: (context) {
+//         return AlertDialog(
+//           backgroundColor: Colors.black,
+//           title: const Text(
+//             'Confirm logout',
+//             style: TextStyle(color: Colors.white),
+//           ),
+//           content: const Text(
+//             'Are you sure you want to sign out?',
+//             style: TextStyle(color: Colors.white70),
+//           ),
+//           actions: [
+//             TextButton(
+//               onPressed: () => Navigator.pop(context, false),
+//               child: const Text('Cancel'),
+//             ),
+//             TextButton(
+//               onPressed: () => Navigator.pop(context, true),
+//               child: const Text(
+//                 'Sign out',
+//                 style: TextStyle(color: Colors.red),
+//               ),
+//             ),
+//           ],
+//         );
+//       },
+//     );
+//
+//     // ##### PHẦN ĐÃ SỬA (Không xóa data khi logout) #####
+//     if (shouldLogout == true && context.mounted) {
+//       final prefs = await SharedPreferences.getInstance();
+//
+//       // Chỉ Xoá thông tin đăng nhập
+//       await prefs.remove('username'); // xoá key username
+//       await prefs.remove('password'); // xoá key password
+//
+//       // [ĐÃ SỬA] KHÔNG xoá dữ liệu thiết bị
+//       // [ĐÃ SỬA] KHÔNG reset danh sách phòng
+//
+//       // Quay lại màn hình login
+//       Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
+//
+//       // Hiển thị dòng chữ thông báo đăng xuất thành công
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(
+//           content: Text('You are logged out!'),
+//           duration: Duration(seconds: 2),
+//         ),
+//       );
+//     }
+//     // ##### KẾT THÚC PHẦN SỬA #####
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Positioned(
+//       right: 5,
+//       child: Card(
+//         elevation: 5,
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+//         child: Column(
+//           children: [
+//             // IconButton(onPressed: () {}, icon: const Icon(Icons.settings)),
+//             IconButton(onPressed: () {}, icon: const Icon(Icons.info)),
+//             IconButton(
+//               onPressed: () => _showLogoutDialog(context),
+//               icon: const Icon(Icons.logout),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 class MyAlertDialog extends StatefulWidget {
   const MyAlertDialog({super.key});

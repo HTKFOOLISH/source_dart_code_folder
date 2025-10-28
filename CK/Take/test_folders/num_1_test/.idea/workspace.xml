@@ -5,11 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1fd5de0e-6c6f-42ac-b6aa-08eaa9e39d6e" name="Changes" comment="login new">
+      <change afterPath="$PROJECT_DIR$/lib/models/user_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/state/user_provider.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/ui/config_screen/user_management_screen.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/ui/widgets/show_icon_options.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/c6640c487763575c89cf314f725ecb62.cache.dill.track.dill" beforeDir="false" afterPath="$PROJECT_DIR$/build/c6640c487763575c89cf314f725ecb62.cache.dill.track.dill" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/my_app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/my_app.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/routing/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/routing/app_router.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/routing/app_routes.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/routing/app_routes.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/ui/home_screen/home_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/ui/home_screen/home_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/ui/home_screen/room_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/ui/home_screen/room_card.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/windows/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/windows/flutter/generated_plugin_registrant.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/windows/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/windows/flutter/generated_plugins.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/ui/login/login_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/ui/login/login_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/ui/room_screen/living_room/living_room.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/ui/room_screen/living_room/living_room.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,6 +26,13 @@
   </component>
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Dart File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <favorite-branches>
@@ -129,7 +144,23 @@
       <option name="project" value="LOCAL" />
       <updated>1761067800875</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="login new">
+      <option name="closed" value="true" />
+      <created>1761669397848</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1761669397848</updated>
+    </task>
+    <task id="LOCAL-00004" summary="login new">
+      <option name="closed" value="true" />
+      <created>1761669453914</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1761669453914</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -147,5 +178,26 @@
     <MESSAGE value="đồng bộ từ master branch" />
     <MESSAGE value="login new" />
     <option name="LAST_COMMIT_MESSAGE" value="login new" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/lib/ui/room_screen/living_room/living_room.dart</url>
+          <line>131</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/lib/ui/room_screen/living_room/living_room.dart</url>
+          <line>119</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/lib/ui/room_screen/living_room/living_room.dart</url>
+          <line>141</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

@@ -5,6 +5,8 @@ class AppRoutes {
   static const device = '/device';
   static const configDevice = '/config_device';
 
+  static const manageUsers = '/manage_users'; // <-- THÊM VÀO
+
   // Điều hướng trang đến các phòng khi mới bắt đầu
   static const livingRoom = '/living_room';
   static const bedRoom = 'bed_room';
