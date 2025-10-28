@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+// import 'package:num_1_test/models/room.dart';
 import 'package:num_1_test/ui/room_screen/living_room/living_room.dart';
 import 'package:num_1_test/ui/config_screen/config_room_card.dart';
 import '../ui/home_screen/home_screen.dart';
@@ -13,7 +14,10 @@ Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     case AppRoutes.home:
       return MaterialPageRoute(builder: (_) => const HomeScreen());
     case AppRoutes.livingRoom:
-      return MaterialPageRoute(builder: (_) => const LivingRoom());
+      return MaterialPageRoute(
+        builder: (_) => LivingRoomRoomArgs(),
+        settings: settings,
+      );
     case AppRoutes.configRoom:
       return MaterialPageRoute(builder: (_) => const ConfigRoomCard());
     // case AppRoutes.device:
