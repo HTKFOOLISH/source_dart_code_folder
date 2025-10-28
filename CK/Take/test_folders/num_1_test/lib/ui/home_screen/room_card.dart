@@ -1,13 +1,15 @@
+// room_card.dart
+
 import 'package:flutter/material.dart';
 
 class RoomCard extends StatefulWidget {
   final String title;
   final String imagePath;
   final int deviceCount;
-  final bool initialState;
+  final bool initialState; // Trạng thái này giờ do RoomProvider quyết định
   final Function()? onTap;
-  final Function()? onLongPress;
-  final Function()? onDoubleTap;
+  final Function()? onLongPress; // <-- Phải có ở đây
+  final Function()? onDoubleTap; // <-- Phải có ở đây
 
   const RoomCard({
     super.key,
@@ -16,8 +18,8 @@ class RoomCard extends StatefulWidget {
     required this.deviceCount,
     this.initialState = false,
     this.onTap,
-    this.onLongPress,
-    this.onDoubleTap,
+    this.onLongPress, // <-- Phải có ở đây
+    this.onDoubleTap, // <-- Phải có ở đây
   });
 
   @override
@@ -25,18 +27,21 @@ class RoomCard extends StatefulWidget {
 }
 
 class _RoomCardState extends State<RoomCard> {
-  bool state = false;
+  // bool state = false; // <-- [ĐÃ XOÁ] Không cần tự quản lý state nữa
   bool isPress = false;
   bool isLongPress = false;
 
   @override
   void initState() {
     super.initState();
-    state = widget.initialState;
+    // state = widget.initialState; // <-- [ĐÃ XOÁ]
   }
 
   @override
   Widget build(BuildContext context) {
+    // Lấy trạng thái trực tiếp từ widget (do provider cung cấp)
+    final bool state = widget.initialState;
+
     return InkWell(
       onLongPress: () {
         setState(() {
@@ -61,14 +66,18 @@ class _RoomCardState extends State<RoomCard> {
           isPress = true;
         });
 
+        // Chỉ gọi hàm onDoubleTap (đã được định nghĩa ở HomeScreen)
+        widget.onDoubleTap?.call();
+
         Future.delayed(const Duration(milliseconds: 300), () {
-          setState(() {
-            isPress = false;
-            state = !state;
-          });
+          if (mounted) { // Thêm kiểm tra 'mounted' cho an toàn
+            setState(() {
+              isPress = false;
+              // state = !state; // <-- [ĐÃ XOÁ] Không tự thay đổi state ở đây
+            });
+          }
         });
 
-        widget.onDoubleTap?.call(); // Gọi callback từ HomeScreen
       },
 
       onTap: widget.onTap,
@@ -101,7 +110,7 @@ class _RoomCardState extends State<RoomCard> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Text(
-                  'Devices: 4', // 4 là số lượng thiết bị hiện có
+                  'Devices: ${widget.deviceCount}', // Lấy từ widget
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.white70,
@@ -111,12 +120,12 @@ class _RoomCardState extends State<RoomCard> {
                 Text(
                   state
                       ? 'Activate'
-                      : 'Deactivate', // tắt đèn thì chuyển màu và ngc lại
+                      : 'Deactivate', // Dùng 'state' đã lấy từ widget
                   style: TextStyle(
                     fontSize: 16,
                     color: state
                         ? Colors.green
-                        : Colors.red, // đổi màu để tắt hết đèn
+                        : Colors.red, // Dùng 'state' đã lấy từ widget
                     fontWeight: FontWeight.bold,
                   ),
                 ),

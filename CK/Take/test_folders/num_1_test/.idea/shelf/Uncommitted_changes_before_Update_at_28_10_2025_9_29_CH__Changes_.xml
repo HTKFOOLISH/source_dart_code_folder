@@ -1,0 +1,23 @@
+<changelist name="Uncommitted_changes_before_Update_at_28_10_2025_9_29_CH_[Changes]" date="1761661787242" recycled="false" toDelete="true">
+  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_28_10_2025_9_29_CH_[Changes]/shelved.patch" />
+  <option name="DESCRIPTION" value="Uncommitted changes before Update at 28/10/2025 9:29 CH [Changes]" />
+  <binary>
+    <option name="BEFORE_PATH" value="windows/flutter/ephemeral/.plugin_symlinks/firebase_auth" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="build/flutter_assets/assets/images/Living_room.png" />
+    <option name="AFTER_PATH" value="build/flutter_assets/assets/images/Living_room.png" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_28_10_2025_9_29_CH_[Changes]/Living_room.png" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value=".flutter-plugins-dependencies" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="windows/flutter/ephemeral/.plugin_symlinks/firebase_core" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="assets/images/Living_room.png" />
+    <option name="AFTER_PATH" value="assets/images/Living_room.png" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_28_10_2025_9_29_CH_[Changes]/Living_room1.png" />
+  </binary>
+</changelist>

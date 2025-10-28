@@ -91,95 +91,104 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       body: rooms.isEmpty
           ? Stack(
-              children: [
-                const Center(
-                  child: Text('Chưa có phòng nào. Hãy bấm + để thêm!'),
-                  // ShowIconOptions(isShowMenu: ,)
-                ),
+        children: [
+          const Center(
+            child: Text('Chưa có phòng nào. Hãy bấm + để thêm!'),
+            // ShowIconOptions(isShowMenu: ,)
+          ),
 
-                // Hiển thị hoặc tắt khi bấm vào icon 3 gạch trên thanh AppBar
-                if (isShowIconMenu) ShowIconOptions(isShowMenu: isShowIconMenu),
-              ],
-            )
+          // Hiển thị hoặc tắt khi bấm vào icon 3 gạch trên thanh AppBar
+          if (isShowIconMenu) ShowIconOptions(isShowMenu: isShowIconMenu),
+        ],
+      )
           : Stack(
-              children: [
-                GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.9,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemCount: rooms.length,
-                  itemBuilder: (context, i) {
-                    final r = rooms[i];
-                    return RoomCard(
-                      title: r.title,
-                      imagePath: r.imagePath,
-                      deviceCount: r.deviceCount,
-                      initialState: r.initialState,
-
-                      onTap: () {
-                        // Điều hướng tới trang hiển thị thiết bị của phòng
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes
-                              .livingRoom, // chưa thay đổi dữ liệu theo từng phòng
-                          arguments: r, // truyền dữ liệu phòng qua
-                        );
-                      },
-
-                      onLongPress: () async {
-                        final shouldDelete = await showDialog<bool>(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              backgroundColor: Colors.black,
-                              title: const Text('Confirm Delete Room'),
-                              content: Text(
-                                'Are you sure you want to delete the "${r.title}\'room"?\nThis action will deleting all devices in this room!',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: const Text(
-                                    'Delete',
-                                    style: TextStyle(color: Colors.red),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-
-                        if (shouldDelete == true && context.mounted) {
-                          context.read<RoomProvider>().removeById(r.id);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Deleted "${r.title}"'),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      },
-
-                      onDoubleTap: () {
-                        print("Double tap on room ${r.title}");
-                      },
-                    );
-                  },
-                ),
-
-                // Hiển thị hoặc tắt khi bấm vào icon 3 gạch trên thanh AppBar
-                if (isShowIconMenu) ShowIconOptions(isShowMenu: isShowIconMenu),
-              ],
+        children: [
+          GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.9,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
             ),
+            itemCount: rooms.length,
+            itemBuilder: (context, i) {
+              final r = rooms[i];
+              return RoomCard(
+                title: r.title,
+                imagePath: r.imagePath,
+                deviceCount: r.deviceCount,
+                initialState: r.initialState,
+
+                onTap: () {
+                  // Điều hướng tới trang hiển thị thiết bị của phòng
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes
+                        .livingRoom, // chưa thay đổi dữ liệu theo từng phòng
+                    arguments: r, // truyền dữ liệu phòng qua
+                  );
+                },
+
+                onLongPress: () async {
+                  final shouldDelete = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        backgroundColor: Colors.black,
+                        title: const Text('Confirm Delete Room'),
+                        content: Text(
+                          'Are you sure you want to delete the "${r.title}\'room"?\nThis action will deleting all devices in this room!',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (shouldDelete == true && context.mounted) {
+                    context.read<RoomProvider>().removeById(r.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Deleted "${r.title}"'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+
+                // ##### PHẦN ĐÃ SỬA (Lưu trạng thái Activate/Deactivate) #####
+                onDoubleTap: () {
+                  // 1. Lấy RoomProvider
+                  final roomProvider = context.read<RoomProvider>();
+
+                  // 2. Tạo một bản sao của phòng với trạng thái (initialState) bị đảo ngược
+                  final updatedRoom = r.copyWith(initialState: !r.initialState);
+
+                  // 3. Yêu cầu Provider cập nhật phòng này (việc này sẽ tự động lưu vào SharedPreferences)
+                  roomProvider.update(updatedRoom);
+                },
+                // ##### KẾT THÚC PHẦN SỬA #####
+              );
+            },
+          ),
+
+          // Hiển thị hoặc tắt khi bấm vào icon 3 gạch trên thanh AppBar
+          if (isShowIconMenu) ShowIconOptions(isShowMenu: isShowIconMenu),
+        ],
+      ),
     );
   }
 }
@@ -224,32 +233,16 @@ class _ShowIconOptionsState extends State<ShowIconOptions> {
       },
     );
 
-    // Nếu người dùng chọn "Đăng xuất"
+    // ##### PHẦN ĐÃ SỬA (Không xóa data khi logout) #####
     if (shouldLogout == true && context.mounted) {
-      // GỌI XOÁ DỮ LIỆU SharedPreferences cho từng trường dữ liệu
       final prefs = await SharedPreferences.getInstance();
 
-      // Xoá thông tin đăng nhập
+      // Chỉ Xoá thông tin đăng nhập
       await prefs.remove('username'); // xoá key username
       await prefs.remove('password'); // xoá key password
 
-      // Xóa toàn bộ danh sách phòng đã thêm
-      // await prefs.remove('rooms_v1');
-
-      // Xóa toàn bộ thiết bị trong các phòng
-      final keys = prefs.getKeys().where((key) => key.startsWith('devices_'));
-      for (var key in keys) {
-        await prefs.remove(key);
-      }
-
-      // HOẶC XOÁ TOÀN BỘ các trường dữ liệu đã từng nhập
-      // await prefs.clear();
-
-      // Xoá danh sách phòng trong bộ nhớ RAM
-      if (context.mounted) {
-        final roomProvider = context.read<RoomProvider>();
-        await roomProvider.resetToDefault();
-      }
+      // [ĐÃ SỬA] KHÔNG xoá dữ liệu thiết bị
+      // [ĐÃ SỬA] KHÔNG reset danh sách phòng
 
       // Quay lại màn hình login
       Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
@@ -262,6 +255,7 @@ class _ShowIconOptionsState extends State<ShowIconOptions> {
         ),
       );
     }
+    // ##### KẾT THÚC PHẦN SỬA #####
   }
 
   @override
