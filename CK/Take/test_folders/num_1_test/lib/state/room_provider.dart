@@ -111,4 +111,49 @@ class RoomProvider extends ChangeNotifier {
       if (kDebugMode) print('RoomProvider persist error: $e');
     }
   }
+
+  void clearRooms() {
+    _rooms.clear(); // Xoá danh sách phòng trong RAM
+    notifyListeners(); // Cập nhật lại UI
+  }
+
+  Future<void> resetToDefault() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final defaultRooms = [
+      Room(
+        id: '001',
+        title: 'Living Room',
+        imagePath: 'assets/images/living_room.png',
+        deviceCount: 4,
+      ),
+      Room(
+        id: '002',
+        title: 'Bed Room',
+        imagePath: 'assets/images/bed_room.png',
+        deviceCount: 4,
+      ),
+      Room(
+        id: '003',
+        title: 'Kitchen',
+        imagePath: 'assets/images/kitchen.png',
+        deviceCount: 4,
+      ),
+    ];
+
+    _rooms
+      ..clear()
+      ..addAll(defaultRooms);
+    await prefs.setString(_storageKey, Room.listToJsonString(defaultRooms));
+
+    notifyListeners();
+  }
+
+  // Hàm thêm mới để reset lại danh sách phòng mặc định
+  // void addAll(List<Room> rooms) {
+  //   _rooms
+  //     ..clear()
+  //     ..addAll(rooms);
+  //   notifyListeners();
+  // }
 }

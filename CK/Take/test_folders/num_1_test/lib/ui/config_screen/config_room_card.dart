@@ -20,7 +20,7 @@ class _ConfigRoomCardState extends State<ConfigRoomCard> {
     'assets/images/kitchen.png',
     'assets/images/garage.png',
     'assets/images/garden.png',
-    'assets/images/redding.png',
+    'assets/images/reading.png',
   ];
   String? _selectedImage;
 
