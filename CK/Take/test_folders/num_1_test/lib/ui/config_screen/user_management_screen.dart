@@ -28,14 +28,14 @@ class UserManagementScreen extends StatelessWidget {
                   controller: usernameCtrl,
                   decoration: const InputDecoration(labelText: 'Username'),
                   validator: (v) =>
-                  v == null || v.isEmpty ? 'Cannot be empty' : null,
+                      v == null || v.isEmpty ? 'Cannot be empty' : null,
                 ),
                 TextFormField(
                   controller: passwordCtrl,
                   decoration: const InputDecoration(labelText: 'Password'),
                   obscureText: true,
                   validator: (v) =>
-                  v == null || v.isEmpty ? 'Cannot be empty' : null,
+                      v == null || v.isEmpty ? 'Cannot be empty' : null,
                 ),
               ],
             ),
@@ -93,20 +93,23 @@ class UserManagementScreen extends StatelessWidget {
           final user = users[index];
           final bool canDelete = users.length > 1; // Không cho xoá user cuối
 
-          return ListTile(
-            leading: const Icon(Icons.person),
-            title: Text(user.username),
-            subtitle: const Text('********'),
-            trailing: IconButton(
-              icon: Icon(
-                Icons.delete,
-                color: canDelete ? Colors.redAccent : Colors.grey,
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ListTile(
+              leading: const Icon(Icons.person),
+              title: Text(user.username),
+              subtitle: const Text('********'),
+              trailing: IconButton(
+                icon: Icon(
+                  Icons.delete,
+                  color: canDelete ? Colors.redAccent : Colors.grey,
+                ),
+                onPressed: !canDelete
+                    ? null // Vô hiệu hoá nút
+                    : () {
+                        context.read<UserProvider>().remove(user.username);
+                      },
               ),
-              onPressed: !canDelete
-                  ? null // Vô hiệu hoá nút
-                  : () {
-                context.read<UserProvider>().remove(user.username);
-              },
             ),
           );
         },

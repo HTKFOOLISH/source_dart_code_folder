@@ -55,7 +55,7 @@ class _ConfigRoomCardState extends State<ConfigRoomCard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Thêm phòng')),
+      appBar: AppBar(title: const Text('Add Room')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -66,13 +66,13 @@ class _ConfigRoomCardState extends State<ConfigRoomCard> {
               TextFormField(
                 controller: _titleCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Tên phòng',
+                  labelText: 'Name',
                   hintText: 'VD: Living Room',
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) {
-                    return 'Vui lòng nhập tên phòng';
+                    return 'Enter Room\'s Name please';
                   }
                   return null;
                 },
@@ -81,21 +81,21 @@ class _ConfigRoomCardState extends State<ConfigRoomCard> {
               TextFormField(
                 controller: _deviceCountCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Số thiết bị',
+                  labelText: 'No.Devices',
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
                 validator: (v) {
-                  if (v == null || v.isEmpty) return 'Nhập số thiết bị';
+                  if (v == null || v.isEmpty) return 'Enter number of devices';
                   final n = int.tryParse(v);
-                  if (n == null || n < 0) return 'Giá trị không hợp lệ';
+                  if (n == null || n < 0) return 'Invalid input';
                   return null;
                 },
               ),
               const SizedBox(height: 12),
               InputDecorator(
                 decoration: const InputDecoration(
-                  labelText: 'Ảnh (asset)',
+                  labelText: 'Image',
                   border: OutlineInputBorder(),
                 ),
                 // ----
@@ -113,7 +113,7 @@ class _ConfigRoomCardState extends State<ConfigRoomCard> {
               ),
               const SizedBox(height: 12),
               SwitchListTile(
-                title: const Text('Bật trạng thái ban đầu'),
+                title: const Text('Turn on initial state'),
                 value: _initialState,
                 onChanged: (v) => setState(() => _initialState = v),
               ),
@@ -123,7 +123,7 @@ class _ConfigRoomCardState extends State<ConfigRoomCard> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Navigator.of(context).maybePop(),
-                      child: const Text('Hủy'),
+                      child: const Text('Cancel'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -131,7 +131,7 @@ class _ConfigRoomCardState extends State<ConfigRoomCard> {
                     child: ElevatedButton.icon(
                       onPressed: _save,
                       icon: const Icon(Icons.check),
-                      label: const Text('Lưu'),
+                      label: const Text('Save'),
                     ),
                   ),
                 ],

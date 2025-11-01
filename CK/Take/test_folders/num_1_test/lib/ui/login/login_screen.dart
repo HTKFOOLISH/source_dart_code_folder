@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushNamedAndRemoveUntil(
         context,
         AppRoutes.home,
-            (route) => false,
+        (route) => false,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -188,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     // Hiển thị lỗi CHỈ sau khi đã bấm Sign In
                     errorText:
-                    _submitted && _usernameController.text.trim().isEmpty
+                        _submitted && _usernameController.text.trim().isEmpty
                         ? 'Username cannot be empty'
                         : null,
                     errorStyle: const TextStyle(
@@ -284,7 +284,11 @@ class _LoginScreenState extends State<LoginScreen> {
               // ##### PHẦN SỬA: HIỂN THỊ LỖI #####
               if (_loginError != null)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0, left: 24, right: 24),
+                  padding: const EdgeInsets.only(
+                    bottom: 12.0,
+                    left: 24,
+                    right: 24,
+                  ),
                   child: Text(
                     _loginError!,
                     textAlign: TextAlign.center,
