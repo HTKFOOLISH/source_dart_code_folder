@@ -1,58 +1,77 @@
+import 'dart:collection';
 import 'package:flutter/material.dart';
-import 'package:num_1_test/ui/devices_screen/devices_model.dart';
+import 'devices_model.dart';
+import '../../state/mqtt_room_store.dart';
 
+/// Helper: tạo id ngắn từ tên thiết bị cũ (nếu UI chưa có deviceId)
+String _slug(String name) {
+  final s = name
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+      .replaceAll(RegExp(r'(^-+|-+$)'), '');
+  return s.isEmpty ? 'device' : s;
+}
+
+/// ViewModel bridge giữa store MQTT và UI device cũ
 class DevicesViewModel extends ChangeNotifier {
-  // List các thiết bị tạo sẵn
-  List<Device> device = [
-    Device(
-      name: 'Light Bulb 1',
-      pathImageName: 'light_bulb',
-      isOn: false,
-      voltage: 220,
-      current: 0.3,
-      power: 17,
-    ),
-    Device(
-      name: 'Fan',
-      pathImageName: 'fan',
-      isOn: false,
-      voltage: 220,
-      current: 0.15,
-      power: 12,
-    ),
-    Device(
-      name: 'Light Bulb 2',
-      pathImageName: 'light_bulb',
-      isOn: false,
-      voltage: 220,
-      current: 0.3,
-      power: 17,
-    ),
-    Device(
-      name: 'Freezer',
-      pathImageName: 'freezer',
-      isOn: false,
-      voltage: 220,
-      current: 1.6,
-      power: 79.3,
-    ),
-  ];
+  final MqttRoomStore store;
 
-  Device?
-  selectedDevice; // lưu thiết bị đang được chọn, nếu chưa có trả về null
+  final List<Device> _devices = [];
+  UnmodifiableListView<Device> get devices => UnmodifiableListView(_devices);
 
-  // hàm chọn thiết bị
-  void selectDevice(Device device) {
-    selectedDevice = device;
+  String? _roomId;
+
+  // Đúng cho ChangeNotifier: add/remove listener dùng VoidCallback
+  late final VoidCallback _storeListener;
+
+  DevicesViewModel({required this.store}) {
+    _storeListener = _onStoreChanged;
+    store.addListener(_storeListener);
+  }
+
+  /// Gán phòng + danh sách thiết bị ban đầu từ UI cũ
+  void bindRoom(String roomId, List<Device> initialUiDevices) {
+    _roomId = roomId;
+
+    _devices
+      ..clear()
+      ..addAll(initialUiDevices);
+
+    _syncFromStore();
+  }
+
+  void _onStoreChanged() {
+    if (_roomId == null) return;
+    _syncFromStore();
+  }
+
+  void _syncFromStore() {
+    final st = store.room(_roomId!);
+    for (final d in _devices) {
+      final id = _slug(d.name);
+      if (st.deviceOn.containsKey(id)) {
+        d.isOn = st.deviceOn[id] ?? d.isOn;
+      }
+    }
     notifyListeners();
   }
 
-  // Hàm bật tắt thiết bị
-  void toggleDevice(Device device, bool value) {
-    device.isOn = value;
-    if (selectedDevice == device) {
-      selectedDevice = device;
-    }
-    notifyListeners(); // UI liên quan sẽ cập nhật trạng thái mới.
+  void toggle(Device d) {
+    if (_roomId == null) return;
+    final id = _slug(d.name);
+    final newVal = !d.isOn;
+    d.isOn = newVal;
+
+    // Publish + cập nhật store (MqttRoomStore sẽ lo publish MQTT)
+    store.setDeviceOn(_roomId!, id, newVal);
+
+    // Phản hồi tức thì trên UI
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    store.removeListener(_storeListener);
+    super.dispose();
   }
 }

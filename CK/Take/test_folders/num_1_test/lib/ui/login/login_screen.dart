@@ -1,4 +1,8 @@
+// login_screen.dart
+
 import 'package:flutter/material.dart';
+import 'package:num_1_test/state/user_provider.dart'; // <-- THÊM VÀO
+import 'package:provider/provider.dart'; // <-- THÊM VÀO
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../routing/app_routes.dart';
 
@@ -24,24 +28,45 @@ class _LoginScreenState extends State<LoginScreen> {
   // Cờ cho biết đã bấm Sign In lần đầu hay chưa
   bool _submitted = false;
 
+  // ##### PHẦN SỬA #####
+  String? _loginError; // Biến lưu thông báo lỗi
+  // ##### KẾT THÚC PHẦN SỬA #####
+
   void _handleSubmit() async {
     setState(() {
       _submitted = true; // từ giờ trở đi mới hiện lỗi nếu trống
+      _loginError = null; // Xóa lỗi cũ mỗi lần bấm
     });
 
-    final userEmpty = _usernameController.text.trim().isEmpty;
-    final passEmpty = _passwordController.text.isEmpty;
+    final String username = _usernameController.text.trim();
+    final String password = _passwordController.text;
 
-    if (!userEmpty && !passEmpty) {
-      // Lưu username và password
+    final userEmpty = username.isEmpty;
+    final passEmpty = password.isEmpty;
+
+    if (userEmpty) {
+      _usernameFocus.requestFocus();
+      return;
+    }
+    if (passEmpty) {
+      _passwordFocus.requestFocus();
+      return;
+    }
+
+    // ##### PHẦN SỬA: LOGIC XÁC THỰC #####
+    final userProvider = context.read<UserProvider>();
+    final bool isValid = userProvider.validate(username, password);
+
+    if (isValid) {
+      // Đăng nhập đúng -> Lưu lại user/pass (để auto-fill) và chuyển trang
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('username', _usernameController.text.trim());
-      await prefs.setString('password', _passwordController.text);
+      await prefs.setString('username', username);
+      await prefs.setString('password', password);
 
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // TODO: Trỏ tới trang home_screen (all room)
-      // Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+      if (!mounted) return;
+
       Navigator.pushNamedAndRemoveUntil(
         context,
         AppRoutes.home,
@@ -54,15 +79,14 @@ class _LoginScreenState extends State<LoginScreen> {
           duration: Duration(seconds: 2),
         ),
       );
-      // TODO: gọi API đăng nhập thật sự ở đây
     } else {
-      // Đưa focus tới ô sai đầu tiên cho tiện nhập
-      if (userEmpty) {
-        _usernameFocus.requestFocus();
-      } else if (passEmpty) {
-        _passwordFocus.requestFocus();
-      }
+      // Đăng nhập sai -> Hiển thị lỗi
+      setState(() {
+        _loginError = 'Invalid username or password. Please try again.';
+      });
+      _passwordFocus.requestFocus();
     }
+    // ##### KẾT THÚC PHẦN SỬA #####
   }
 
   // ----- TỰ ĐỘNG ĐIỀN THÔNG TIN KHI MỞ APP -----
@@ -79,10 +103,13 @@ class _LoginScreenState extends State<LoginScreen> {
     final savedUser = prefs.getString('username') ?? '';
     final savedPass = prefs.getString('password') ?? '';
 
-    setState(() {
-      _usernameController.text = savedUser;
-      _passwordController.text = savedPass;
-    });
+    // Chỉ tự điền nếu có cả 2
+    if (savedUser.isNotEmpty && savedPass.isNotEmpty) {
+      setState(() {
+        _usernameController.text = savedUser;
+        _passwordController.text = savedPass;
+      });
+    }
   }
 
   @override
@@ -93,10 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordFocus.dispose();
     super.dispose();
   }
-
-  // static const String labelTextUsername = 'Username';
-  // static const String labelTextPassword = 'Password';
-  // final LoginViewModel loginViewModel = LoginViewModel();
 
   @override
   Widget build(BuildContext context) {
@@ -257,6 +280,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   textInputAction: TextInputAction.done,
                 ),
               ),
+
+              // ##### PHẦN SỬA: HIỂN THỊ LỖI #####
+              if (_loginError != null)
+                Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 12.0,
+                    left: 24,
+                    right: 24,
+                  ),
+                  child: Text(
+                    _loginError!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red, fontSize: 16),
+                  ),
+                ),
+              // ##### KẾT THÚC PHẦN SỬA #####
 
               // SIGN IN BUTTON (luôn bấm được)
               SizedBox(
