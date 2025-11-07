@@ -19,6 +19,15 @@ class DevicesViewModel extends ChangeNotifier {
   final List<Device> _devices = [];
   UnmodifiableListView<Device> get devices => UnmodifiableListView(_devices);
 
+  /// Alias để tương thích UI cũ: viewModel.device (List<Device>)
+  List<Device> get device => _devices;
+  set device(List<Device> value) {
+    _devices
+      ..clear()
+      ..addAll(value);
+    notifyListeners();
+  }
+
   String? _roomId;
 
   // Đúng cho ChangeNotifier: add/remove listener dùng VoidCallback
@@ -33,6 +42,9 @@ class DevicesViewModel extends ChangeNotifier {
   void bindRoom(String roomId, List<Device> initialUiDevices) {
     _roomId = roomId;
 
+    // ✅ RẤT QUAN TRỌNG: tạo bản sao, tránh alias list
+    final copy = List<Device>.from(initialUiDevices);
+
     _devices
       ..clear()
       ..addAll(initialUiDevices);
@@ -46,27 +58,50 @@ class DevicesViewModel extends ChangeNotifier {
   }
 
   void _syncFromStore() {
-    final st = store.room(_roomId!);
+    final rid = _roomId;
+    if (rid == null) return;
+
+    final st = store.room(rid);
+    bool changed = false;
+
     for (final d in _devices) {
       final id = _slug(d.name);
       if (st.deviceOn.containsKey(id)) {
-        d.isOn = st.deviceOn[id] ?? d.isOn;
+        final v = st.deviceOn[id];
+        if (v != null && v != d.isOn) {
+          d.isOn = v;
+          changed = true;
+        }
       }
     }
-    notifyListeners();
+    if (changed) notifyListeners();
   }
 
+  /// API cũ có thể đã gọi: chuyển trạng thái bằng cách đảo
   void toggle(Device d) {
-    if (_roomId == null) return;
-    final id = _slug(d.name);
-    final newVal = !d.isOn;
-    d.isOn = newVal;
-
-    // Publish + cập nhật store (MqttRoomStore sẽ lo publish MQTT)
-    store.setDeviceOn(_roomId!, id, newVal);
-
-    // Phản hồi tức thì trên UI
+    // Cập nhật local trước để UI phản hồi ngay
+    d.isOn = !d.isOn;
     notifyListeners();
+
+    // Nếu đã bind phòng thì publish MQTT
+    if (_roomId == null) return;
+    final rid = _roomId!;
+    final id = _slug(d.name);
+    store.setDeviceOn(rid, id, d.isOn);
+  }
+
+  /// API mà UI hiện tại đang gọi trong living_room.dart:
+  /// toggleDevice(device, value)
+  void toggleDevice(Device d, bool value) {
+    // Cập nhật local trước để UI phản hồi ngay
+    d.isOn = value;
+    notifyListeners();
+
+    // Nếu đã bind phòng thì publish MQTT
+    if (_roomId == null) return;
+    final rid = _roomId!;
+    final id = _slug(d.name);
+    store.setDeviceOn(rid, id, value);
   }
 
   @override

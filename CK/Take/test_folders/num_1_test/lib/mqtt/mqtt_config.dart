@@ -49,7 +49,7 @@ class MqttConfig {
   factory MqttConfig.fromJson(Map<String, dynamic> j) => MqttConfig(
     host: j['host'] as String,
     port: (j['port'] as num).toInt(),
-    useTls: j['useTls'] ?? false,
+    useTls: (j['useTls'] as bool?) ?? false,
     username: j['username'] as String?,
     password: j['password'] as String?,
     clientId: j['clientId'] as String,
@@ -60,14 +60,14 @@ class MqttConfig {
     required String host,
     required String username,
     required String password,
-    String clientId = 'flutter-app',
+    String? clientId,
   }) => MqttConfig(
     host: host,
     port: 8883,
     useTls: true,
     username: username,
     password: password,
-    clientId: clientId,
+    clientId: clientId ?? 'flutter-${DateTime.now().millisecondsSinceEpoch}',
   );
 
   factory MqttConfig.local({
@@ -83,7 +83,7 @@ class MqttConfig {
     clientId: clientId,
   );
 
-  static const _prefsKey = 'mqtt_config_v1';
+  static const _prefsKey = 'mqtt_config_v2';
 
   static Future<MqttConfig?> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -95,5 +95,17 @@ class MqttConfig {
   static Future<void> save(MqttConfig cfg) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefsKey, jsonEncode(cfg.toJson()));
+  }
+
+  // Thêm helper tạo clientId (nếu bạn muốn dùng ở nơi khác)
+  static String genClientId([String prefix = 'flutter']) {
+    return '$prefix-${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  // Thêm helper xóa cấu hình đã lưu
+  // Gọi await MqttConfig.clear(); trước khi save
+  static Future<void> clear() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_prefsKey);
   }
 }

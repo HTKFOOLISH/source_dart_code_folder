@@ -34,7 +34,8 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Poppins',
         colorScheme: colorScheme, // Sử dụng colorScheme đã khai báo
         scaffoldBackgroundColor: Color(0xFF303030),
-        textTheme: ThemeData.dark().textTheme.apply( // Dùng ThemeData.dark()
+        textTheme: ThemeData.dark().textTheme.apply(
+          // Dùng ThemeData.dark()
           bodyColor: Colors.white,
           displayColor: Colors.white,
           decorationColor: Colors.white,
@@ -56,8 +57,8 @@ class MyApp extends StatelessWidget {
             side: BorderSide(color: Colors.white, width: 3),
           ),
         ),
-        // ##### KẾT THÚC PHẦN SỬA #####
 
+        // ##### KẾT THÚC PHẦN SỬA #####
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: colorScheme.onSurface,
@@ -76,7 +77,7 @@ class MyApp extends StatelessWidget {
             side: BorderSide(color: Colors.white60, width: 3),
           ),
         ),
-      ), // <-- Dấu ')' này bị thiếu/thừa
+      ),
     );
   }
 }

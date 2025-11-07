@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Cấp quyền mạng trên Android -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- END -->
+
     <application
         android:label="num_1_test"
         android:name="${applicationName}"

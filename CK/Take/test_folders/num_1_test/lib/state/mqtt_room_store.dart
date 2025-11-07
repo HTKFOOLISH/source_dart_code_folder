@@ -47,9 +47,12 @@ class RoomRuntimeState {
 }
 
 class MqttRoomStore extends ChangeNotifier {
+  /// Luôn dùng cùng một MqttService (truyền từ ngoài hoặc fallback singleton)
+  final MqttService _svc; // thêm field
+
   final Map<String, RoomRuntimeState> _rooms = {};
-  late final StreamSubscription _sub;
-  late final StreamSubscription _conn;
+  late final StreamSubscription _msgSub;
+  late final StreamSubscription _connSub;
 
   UnmodifiableMapView<String, RoomRuntimeState> get rooms =>
       UnmodifiableMapView(_rooms);
@@ -57,20 +60,28 @@ class MqttRoomStore extends ChangeNotifier {
   RoomRuntimeState room(String roomId) =>
       _rooms.putIfAbsent(roomId, () => RoomRuntimeState(roomId: roomId));
 
-  MqttRoomStore() {
-    // Bind MQTT
-    _sub = MqttService.I.messages.listen(_onMessage);
-    _conn = MqttService.I.connection.listen((connected) {
+  /// ✅ Chỉ một constructor. Nhận `service` tuỳ chọn để tránh double-connect.
+  /// Không tự connect ở đây; connect được gọi ở `main.dart` trước đó.
+  MqttRoomStore({MqttService? service}) : _svc = service ?? MqttService.I {
+    // DEBUG
+    // ignore: avoid_print
+    print('[MqttRoomStore] instance = ${identityHashCode(this)}');
+
+    // Lắng nghe message từ service
+    _msgSub = _svc.messages.listen(_onMessage);
+
+    // Khi kết nối thành công, subscribe wildcard 1 lần
+    _connSub = _svc.connection.listen((connected) {
       if (connected) {
         // Subscribe wildcard snapshot
-        MqttService.I.subscribe(RoomTopics.wildcardSnapshot());
+        _svc.subscribe(RoomTopics.wildcardSnapshot());
       }
     });
   }
 
   void _onMessage(MqttIncomingMessage m) {
-    // Chỉ xử lý các topic snapshot
-    final snapPrefix = 'rooms/';
+    // Chỉ xử lý các topic snapshot (ví dụ: rooms/<roomId>/snapshot)
+    // final snapPrefix = 'rooms/';
     if (!m.topic.contains('/snapshot')) return;
 
     try {
@@ -81,6 +92,7 @@ class MqttRoomStore extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       // ignore lỗi parse
+      print('LỖI PARSE RoomPacket TỪ MQTT: $e');
     }
   }
 
@@ -100,7 +112,9 @@ class MqttRoomStore extends ChangeNotifier {
           .toList(),
       ts: DateTime.now().millisecondsSinceEpoch,
     );
-    MqttService.I.publishString(RoomTopics.command(roomId), pkt.encode());
+
+    // ✅ Dùng đúng instance _svc (không gọi trực tiếp singleton)
+    _svc.publishString(RoomTopics.command(roomId), pkt.encode());
 
     // Cập nhật local ngay để UI phản hồi mượt
     _rooms[roomId] = cur;
@@ -109,8 +123,8 @@ class MqttRoomStore extends ChangeNotifier {
 
   @override
   void dispose() {
-    _sub.cancel();
-    _conn.cancel();
+    _msgSub.cancel();
+    _connSub.cancel();
     super.dispose();
   }
 }
