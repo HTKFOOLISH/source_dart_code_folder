@@ -23,13 +23,13 @@ Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     case AppRoutes.configRoom:
       return MaterialPageRoute(builder: (_) => const ConfigRoomCard());
 
-  // ##### THÊM CASE NÀY VÀO #####
+    // ##### THÊM CASE NÀY VÀO #####
     case AppRoutes.manageUsers:
       return MaterialPageRoute(builder: (_) => const UserManagementScreen());
-  // ##### KẾT THÚC PHẦN THÊM #####
+    // ##### KẾT THÚC PHẦN THÊM #####
 
-  // case AppRoutes.device:
-  // ...
+    // case AppRoutes.device:
+    // ...
     default:
       return null;
   }

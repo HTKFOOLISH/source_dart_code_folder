@@ -5,7 +5,7 @@ import 'dart:async'; // <-- THÊM VÀO
 import 'dart:math'; // <-- THÊM VÀO
 
 import 'package:flutter/material.dart';
-// THÊM DÒNG NÀY:
+import 'package:num_1_test/state/mqtt_room_store.dart';
 import 'package:num_1_test/ui/widgets/show_icon_options.dart';
 import 'package:provider/provider.dart';
 import 'package:num_1_test/models/room.dart';
@@ -73,8 +73,8 @@ class LivingRoomState extends State<LivingRoom>
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => DevicesViewModel(),
+    return ChangeNotifierProvider<DevicesViewModel>(
+      create: (ctx) => DevicesViewModel(store: ctx.read<MqttRoomStore>()),
       child: Scaffold(
         appBar: AppBar(
           title: Row(
@@ -94,10 +94,10 @@ class LivingRoomState extends State<LivingRoom>
         ),
         body: Stack(
           children: [
-            LivingRoomBodyScreen(roomId: room.id),
+            LivingRoomBodyScreen(roomId: room.id, roomName: room.title),
 
             // Ẩn/Hiện menu trên thanh AppBar
-            if (isShowIconMenu)  ShowIconOptions(isShowMenu: true),
+            if (isShowIconMenu) ShowIconOptions(isShowMenu: true),
           ],
         ),
       ),
@@ -107,7 +107,12 @@ class LivingRoomState extends State<LivingRoom>
 
 class LivingRoomBodyScreen extends StatefulWidget {
   final String roomId;
-  const LivingRoomBodyScreen({super.key, required this.roomId});
+  final String roomName;
+  const LivingRoomBodyScreen({
+    super.key,
+    required this.roomId,
+    required this.roomName,
+  });
 
   @override
   State<StatefulWidget> createState() => _LivingRoomBodyScreenState();
@@ -124,10 +129,232 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
   Timer? _sensorTimer;
   // ##### KẾT THÚC PHẦN THÊM MỚI #####
 
+  // Trả về 4 thiết bị mặc định tùy loại phòng.
+  // Đổi pathImageName theo assets bạn đang có (png + _on.gif).
+  String _roomTypeFromName(String roomName) {
+    final s = roomName.toLowerCase();
+
+    // Bedroom
+    if (s.contains('bed') || s.contains('ngủ') || s.contains('phòng ngủ')) {
+      return 'bedroom';
+    }
+
+    // Kitchen
+    if (s.contains('kitchen') || s.contains('bếp')) {
+      return 'kitchen';
+    }
+
+    // Living room / Phòng khách
+    if (s.contains('living') ||
+        s.contains('khách') ||
+        s.contains('phòng khách')) {
+      return 'living';
+    }
+
+    // Reading room / Thư viện
+    if (s.contains('read') || s.contains('đọc') || s.contains('thư viện'))
+      return 'reading';
+
+    // Không khớp từ khoá nào → dùng "generic"
+    return 'generic';
+  }
+
+  List<Device> _defaultDevicesForRoom(String roomName) {
+    final type = _roomTypeFromName(roomName);
+
+    switch (type) {
+      case 'bedroom':
+        return [
+          Device(
+            name: 'Bed Lamp',
+            pathImageName: 'light_bulb',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Ceiling Light',
+            pathImageName: 'light_bulb',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Fan',
+            pathImageName: 'fan',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Air Conditioner',
+            pathImageName: 'freezer',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+        ];
+
+      case 'kitchen':
+        return [
+          Device(
+            name: 'Kitchen Ceiling Light',
+            pathImageName: 'light_bulb',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Cabinet Lighting',
+            pathImageName: 'light_bulb',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Kitchen Hood', // máy hút mùi
+            pathImageName: 'freezer',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Kitchen Fan',
+            pathImageName: 'fan',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+        ];
+
+      case 'reading':
+        return [
+          Device(
+            name: 'Mirror Light',
+            pathImageName: 'light_bulb',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Ceiling Light',
+            pathImageName: 'light_bulb',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Water Heater',
+            pathImageName: 'freezer',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Exhaust Fan',
+            pathImageName: 'fan',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+        ];
+
+      case 'living':
+        return [
+          Device(
+            name: 'Ceiling Light',
+            pathImageName: 'light_bulb',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Fan',
+            pathImageName: 'fan',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Air Conditioner',
+            pathImageName: 'freezer',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Floor Lamp',
+            pathImageName: 'light_bulb',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+        ];
+
+      default: // 'generic' + mọi tên phòng tùy ý như "abcxyz"
+        return [
+          Device(
+            name: 'Ceiling Light',
+            pathImageName: 'light_bulb',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Fan',
+            pathImageName: 'fan',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Table Lamp',
+            pathImageName: 'light_bulb',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+          Device(
+            name: 'Air Conditioner',
+            pathImageName: 'freezer',
+            isOn: false,
+            voltage: 220,
+            current: 0.0,
+            power: 0.0,
+          ),
+        ];
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _loadDevices(); // Khi vào trang thì load trạng thái đã lưu
+    // Gọi sau frame đầu tiên để chắc chắn Provider sẵn sàng
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // DEBUG clear once:
+      // final prefs = await SharedPreferences.getInstance();
+      // await prefs.remove(_storageKey());
+      _loadDevices();
+    });
 
     // ##### PHẦN THÊM MỚI (SENSOR) #####
     // Khởi tạo giá trị ban đầu
@@ -138,6 +365,21 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
     });
     // ##### KẾT THÚC PHẦN THÊM MỚI #####
   }
+
+  String _storageKey() {
+    // nếu roomId có giá trị → dùng roomId
+    final id = widget.roomId.trim();
+    if (id.isNotEmpty) return 'devices_$id';
+
+    // nếu roomId rỗng, dùng slug từ roomName
+    final slug = widget.roomName
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
+    return 'devices_${slug.isEmpty ? 'room' : slug}';
+  }
+  // ##### KẾT THÚC PHẦN THÊM MỚI #####
+
 
   // ##### PHẦN THÊM MỚI (SENSOR) #####
   @override
@@ -159,29 +401,74 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
   }
   // ##### KẾT THÚC PHẦN THÊM MỚI #####
 
-
   Future<void> _loadDevices() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonData = prefs.getString('devices_${widget.roomId}');
-    if (jsonData != null && mounted) { // Thêm kiểm tra 'mounted'
-      final decoded = jsonDecode(jsonData) as List;
-      final devices = decoded
-          .map((e) => Device.fromJson(e as Map<String, dynamic>))
-          .toList();
-      final viewModel = Provider.of<DevicesViewModel>(context, listen: false);
-      viewModel.device = devices;
-      viewModel.notifyListeners();
+    final key = _storageKey();
+    final viewModel = Provider.of<DevicesViewModel>(context, listen: false);
+
+    print('[devices] storageKey = $key'); // <— log
+
+    List<Device>? devices;
+
+    // Đọc dữ liệu đã lưu (nếu có) — robust
+    try {
+      final jsonData = prefs.getString(key);
+      print(
+        '[devices] raw json = ${jsonData?.substring(0, (jsonData.length > 100 ? 100 : jsonData.length))}',
+      ); // <— log
+      if (jsonData != null && jsonData.trim().isNotEmpty) {
+        final decoded = jsonDecode(jsonData);
+        if (decoded is List) {
+          devices = decoded
+              .whereType<Map<String, dynamic>>()
+              .map((e) => Device.fromJson(e))
+              .toList();
+          print('[devices] loaded ${devices.length} items'); // <— log
+        } else {
+          // ignore: avoid_print
+          print('[devices] data is not a List; will seed defaults'); // <— log
+        }
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('[devices] parse error: $e — will seed defaults'); // <— log
     }
+
+    // Nếu chưa có hoặc rỗng → seed theo tên phòng
+    if (devices == null || devices.isEmpty) {
+      final defaults = _defaultDevicesForRoom(widget.roomName);
+      devices = defaults;
+      await _saveDevices(defaults);
+      print(
+        '[devices] seeded ${defaults.length} items for ${widget.roomName}',
+      ); // <— log
+    }
+
+    if (!mounted) return;
+
+    // Gán vào ViewModel (setter đã notifyListeners)
+    viewModel.device = devices;
+
+    // Bind room để bật/tắt hoạt động qua MQTT về sau
+    viewModel.bindRoom(widget.roomId, List<Device>.from(viewModel.device));
+
+    print('[devices] viewModel set + bindRoom done'); // <— log
   }
 
   Future<void> _saveDevices(List<Device> devices) async {
     final prefs = await SharedPreferences.getInstance();
+    final key = _storageKey(); // dùng cùng key
     final encoded = jsonEncode(devices.map((d) => d.toJson()).toList());
-    await prefs.setString('devices_${widget.roomId}', encoded);
+    await prefs.setString(key, encoded);
   }
 
   @override
   Widget build(BuildContext context) {
+    // ÉP theo dõi DevicesViewModel ở level toàn bộ body
+    final vm = context.watch<DevicesViewModel>();
+    // DEBUG (tạm thời): in độ dài list mỗi lần rebuild
+    // ignore: avoid_print
+    print('[devices] build list length = ${vm.device.length}');
     return Column(
       children: [
         // Hiển thị thông số cho từng thiết bị khi bấm vào
@@ -196,7 +483,8 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
                 child: _SensorCard(
                   icon: Icons.thermostat,
                   label: 'Temperature',
-                  value: '${_temperature.toStringAsFixed(1)} °C', // Format 1 chữ số thập phân
+                  value:
+                      '${_temperature.toStringAsFixed(1)} °C', // Format 1 chữ số thập phân
                   iconColor: Colors.redAccent,
                 ),
               ),
@@ -212,35 +500,40 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
             ],
           ),
         ),
-        // ##### KẾT THÚC PHẦN THÊM MỚI #####
 
+        // ##### KẾT THÚC PHẦN THÊM MỚI #####
         Padding(
-          padding: const EdgeInsets.fromLTRB(20.0, 12.0, 20.0, 12.0), // Giảm padding top
+          padding: const EdgeInsets.fromLTRB(
+            20.0,
+            12.0,
+            20.0,
+            12.0,
+          ), // Giảm padding top
           child: Row(children: [const Text('Running Devices')]),
         ),
 
         // Thẻ các thiết bị
         Expanded(
           flex: 3,
-          child: Consumer<DevicesViewModel>(
-            builder: (context, viewModel, _) {
-              // Kiểm tra nếu ban đầu chưa có thiết bị nào
-              if (viewModel.device.isEmpty) {
+          child: Builder(
+            builder: (context) {
+              if (vm.device.isEmpty) {
                 return Center(
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      viewModel.device.add(
+                      final newList = [
+                        ...vm.device,
                         Device(
                           name: 'New Device',
-                          pathImageName: 'default_device', // Cần có ảnh này
+                          pathImageName: 'unknown',
                           isOn: false,
                           voltage: 220,
                           current: 0.0,
                           power: 0.0,
                         ),
-                      );
-                      viewModel.notifyListeners();
-                      await _saveDevices(viewModel.device); // Lưu sau khi thêm
+                      ];
+                      vm.device = newList; // dùng setter để notify
+                      await _saveDevices(newList); // lưu lại ngay
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('Thêm thiết bị mới'),
@@ -250,21 +543,22 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
 
               // Nếu có thiết bị, hiển thị ListView
               return ListView.builder(
-                itemCount: viewModel.device.length,
+                itemCount: vm.device.length,
                 itemBuilder: (context, index) {
-                  final device = viewModel.device[index];
+                  final device = vm.device[index];
                   return InkWell(
-                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
                     onTap: () {
                       setState(() {
                         count = index;
                         isOnTap = true;
                       });
                     },
-
                     child: Card(
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(20),
+                        ),
                         side: BorderSide(
                           color: (count == index)
                               ? Colors.blue
@@ -281,19 +575,14 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
                           padding: const EdgeInsets.all(25.0),
                           child: Text(
                             device.name,
-                            style: TextStyle(fontSize: 20),
-                          ),
+                            style: const TextStyle(fontSize: 20),
+                          ), // giữ nguyên style cũ nếu bạn cần
                         ),
                         trailing: Switch(
                           value: device.isOn,
                           onChanged: (value) async {
-                            Provider.of<DevicesViewModel>(
-                              context,
-                              listen: false,
-                            ).toggleDevice(device, value);
-                            await _saveDevices(
-                              viewModel.device,
-                            ); // Lưu lại khi bật/tắt
+                            vm.toggleDevice(device, value);
+                            await _saveDevices(vm.device);
                           },
                         ),
                       ),
@@ -362,21 +651,15 @@ class _DeviceInfoState extends State<DeviceInfo> {
                   children: [
                     Expanded(
                       flex: 1,
-                      child: Center(
-                        child: Text('Current: ${device.current}'),
-                      ),
+                      child: Center(child: Text('Current: ${device.current}')),
                     ),
                     Expanded(
                       flex: 1,
-                      child: Center(
-                        child: Text('Voltage: ${device.voltage}'),
-                      ),
+                      child: Center(child: Text('Voltage: ${device.voltage}')),
                     ),
                     Expanded(
                       flex: 1,
-                      child: Center(
-                        child: Text('Power: ${device.power}'),
-                      ),
+                      child: Center(child: Text('Power: ${device.power}')),
                     ),
                   ],
                 ),
@@ -385,6 +668,52 @@ class _DeviceInfoState extends State<DeviceInfo> {
           ),
         );
       },
+    );
+  }
+}
+
+// ##### WIDGET MỚI CHO SENSOR #####
+class _SensorCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color iconColor;
+
+  const _SensorCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.iconColor = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.black,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.white60, width: 2),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0), // Giảm padding
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: iconColor, size: 36), // Giảm kích thước icon
+            const SizedBox(height: 8),
+            Text(label, style: TextStyle(fontSize: 16, color: Colors.white70)),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 20, // Giảm kích thước chữ
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

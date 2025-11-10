@@ -6,6 +6,10 @@ import 'package:provider/provider.dart'; // <-- THÊM VÀO
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../routing/app_routes.dart';
 
+// CHANGE: import MQTT để hiển thị trạng thái và đảm bảo kết nối sau login
+import 'package:num_1_test/mqtt/mqtt_config.dart'; // CHANGE
+import 'package:num_1_test/mqtt/mqtt_service.dart'; // CHANGE
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -31,6 +35,26 @@ class _LoginScreenState extends State<LoginScreen> {
   // ##### PHẦN SỬA #####
   String? _loginError; // Biến lưu thông báo lỗi
   // ##### KẾT THÚC PHẦN SỬA #####
+
+  // CHANGE: Đảm bảo MQTT đã kết nối (dùng config đã lưu)
+  Future<void> _ensureMqttConnected() async {
+    try {
+      final cfg = await MqttConfig.load();
+      if (cfg == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('MQTT config chưa được thiết lập!')),
+        );
+        return;
+      }
+      await MqttService.I.connect(cfg);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Kết nối MQTT lỗi: $e')));
+    }
+  }
 
   void _handleSubmit() async {
     setState(() {
@@ -62,6 +86,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('username', username);
       await prefs.setString('password', password);
+
+      // CHANGE: Đảm bảo MQTT sẵn sàng sau đăng nhập (nếu lúc mở app chưa vào được)
+      await _ensureMqttConnected(); // CHANGE
 
       await Future.delayed(const Duration(milliseconds: 500));
 
@@ -123,6 +150,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // CHANGE: Hiển thị trạng thái MQTT
+    final connectionStream = MqttService.I.connection; // CHANGE
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -147,6 +177,41 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 3.0,
                 ),
               ),
+
+              // CHANGE: Thanh trạng thái MQTT (Connected/Disconnected)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: StreamBuilder<bool>(
+                  stream: connectionStream,
+                  initialData: MqttService.I.isConnected,
+                  builder: (context, snap) {
+                    final ok = snap.data == true;
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          ok ? Icons.cloud_done : Icons.cloud_off,
+                          color: ok ? Colors.lightGreen : Colors.redAccent,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          ok ? 'MQTT Connected' : 'MQTT Disconnected',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: ok ? Colors.lightGreen : Colors.redAccent,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        TextButton(
+                          onPressed: _ensureMqttConnected, // thử reconnect
+                          child: const Text('Reconnect'),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              // END CHANGE
 
               // USERNAME
               SizedBox(
@@ -246,7 +311,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     hintText: 'Enter your password',
                     hintStyle: const TextStyle(
-                      color: Colors.white,
+                      color: Colors.white70,
                       fontSize: 20,
                     ),
                     // Lỗi chỉ hiện sau khi đã bấm Sign In

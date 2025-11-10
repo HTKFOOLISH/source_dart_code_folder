@@ -5,8 +5,36 @@ import 'package:num_1_test/models/user_model.dart';
 import 'package:num_1_test/state/user_provider.dart';
 import 'package:provider/provider.dart';
 
+// CHANGE: thêm import MQTT để có nút reconnect + hiển thị trạng thái
+import 'package:num_1_test/mqtt/mqtt_config.dart'; // CHANGE
+import 'package:num_1_test/mqtt/mqtt_service.dart'; // CHANGE
+
 class UserManagementScreen extends StatelessWidget {
   const UserManagementScreen({super.key});
+
+  // CHANGE: Hàm reconnect MQTT từ màn hình quản lý user
+  Future<void> _reconnectMqtt(BuildContext context) async {
+    try {
+      final cfg = await MqttConfig.load();
+      if (cfg == null) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('MQTT config chưa được thiết lập!')),
+        );
+        return;
+      }
+      await MqttService.I.connect(cfg);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('MQTT reconnected.')));
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Reconnect lỗi: $e')));
+    }
+  }
 
   Future<void> _showAddUserDialog(BuildContext context) async {
     final formKey = GlobalKey<FormState>();
@@ -81,8 +109,36 @@ class UserManagementScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final users = context.watch<UserProvider>().users;
 
+    // CHANGE: stream trạng thái để hiện icon cloud trong AppBar
+    final connectionStream = MqttService.I.connection; // CHANGE
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Users')),
+      appBar: AppBar(
+        title: const Text('Manage Users'),
+        actions: [
+          // CHANGE: Hiển thị trạng thái MQTT + nút reconnect nhanh
+          StreamBuilder<bool>(
+            stream: connectionStream,
+            initialData: MqttService.I.isConnected,
+            builder: (context, snap) {
+              final ok = snap.data == true;
+              return Row(
+                children: [
+                  Icon(
+                    ok ? Icons.cloud_done : Icons.cloud_off,
+                    color: ok ? Colors.lightGreen : Colors.redAccent,
+                  ),
+                  IconButton(
+                    tooltip: 'Reconnect MQTT',
+                    onPressed: () => _reconnectMqtt(context),
+                    icon: const Icon(Icons.refresh),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddUserDialog(context),
         child: const Icon(Icons.add),
