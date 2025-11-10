@@ -378,6 +378,8 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
         .replaceAll(RegExp(r'^-+|-+$'), '');
     return 'devices_${slug.isEmpty ? 'room' : slug}';
   }
+  // ##### KẾT THÚC PHẦN THÊM MỚI #####
+
 
   // ##### PHẦN THÊM MỚI (SENSOR) #####
   @override
@@ -539,6 +541,7 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
                 );
               }
 
+              // Nếu có thiết bị, hiển thị ListView
               return ListView.builder(
                 itemCount: vm.device.length,
                 itemBuilder: (context, index) {
@@ -668,6 +671,53 @@ class _DeviceInfoState extends State<DeviceInfo> {
     );
   }
 }
+
+// ##### WIDGET MỚI CHO SENSOR #####
+class _SensorCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color iconColor;
+
+  const _SensorCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.iconColor = Colors.white,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.black,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.white60, width: 2),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0), // Giảm padding
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: iconColor, size: 36), // Giảm kích thước icon
+            const SizedBox(height: 8),
+            Text(label, style: TextStyle(fontSize: 16, color: Colors.white70)),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 20, // Giảm kích thước chữ
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
 // ##### WIDGET MỚI CHO SENSOR #####
 class _SensorCard extends StatelessWidget {

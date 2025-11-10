@@ -77,7 +77,7 @@ class MyApp extends StatelessWidget {
             side: BorderSide(color: Colors.white60, width: 3),
           ),
         ),
-      ),
+      ), // <-- Dấu ')' này bị thiếu/thừa
     );
   }
 }
