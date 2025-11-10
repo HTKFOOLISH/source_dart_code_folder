@@ -1,5 +1,9 @@
 // main.dart
 
+// CHANGE: Giữ cấu trúc cũ, nhưng thay toàn bộ chỗ dùng MqttConfig.hivemqCloud
+// thành MqttConfig.tcp(...) với useTls=true (chuẩn cho HiveMQ Cloud qua TLS/TCP).
+
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:num_1_test/mqtt/mqtt_config.dart';
 import 'package:num_1_test/mqtt/mqtt_service.dart';
@@ -19,17 +23,29 @@ Future<void> main() async {
 
   // ĐIỀN THÔNG TIN THẬT 3 dòng dưới đây
   const hivemqHost = 'af1af10d2f264a09a3e2dac9ced2e126.s1.eu.hivemq.cloud';
-  const hivemqUser = 'admin';
-  const hivemqPass = 'Admin123';
+  const hivemqUser = 'flutter_user';
+  const hivemqPass = 'StrongPass!234';
 
   if (cfg == null || DEV_FORCE_OVERWRITE) {
     // ignore: avoid_print
     print("[MQTT]: ghi đè cấu hình HiveMQ Cloud.");
-    cfg = MqttConfig.hivemqCloud(
-      host: 'af1af10d2f264a09a3e2dac9ced2e126.s1.eu.hivemq.cloud',
-      username: 'admin',
-      password: 'Admin123',
-    ).copyWith(port: 8884);
+    // CHANGE: thay vì .hivemqCloud(...) (không còn), dùng TCP/TLS chuẩn:
+    cfg =
+        MqttConfig.tcp(
+          host: hivemqHost,
+          port: 8883, // TLS/TCP của HiveMQ Cloud
+          useTls: true, // CHANGE: bật TLS cho cổng 8883
+          username: hivemqUser,
+          password: hivemqPass,
+          clientId: 'flutter-${DateTime.now().millisecondsSinceEpoch}',
+          keepAliveSec: 30,
+        ).copyWith(
+          // CHANGE (tuỳ chọn): cấu hình Last Will nếu muốn thông báo offline
+          willTopic: 'home/app/status',
+          willPayload: 'offline',
+          willQos: 1,
+          willRetain: true,
+        );
 
     // Xóa cấu hình cũ và lưu lại
     await MqttConfig.clear(); // xóa cấu hình cũ
@@ -45,11 +61,33 @@ Future<void> main() async {
 
   // 2) Kết nối MQTT một lần qua singleton
   try {
-    await MqttService.I.connect(cfg);
-  } catch (_) {
-    // TODO: log/hiển thị nếu cần
-    print('Lỗi kết nối MQTT');
+    await MqttService.I.connect(cfg); // CHANGE: dùng API connect mới
+  } catch (e) {
+    // ignore: avoid_print
+    print('Lỗi kết nối MQTT: $e');
   }
+
+  // --- BEGIN: Self-test ping ---
+  // CHANGE: Giữ nguyên ý tưởng cũ, ping khi đã connected.
+  MqttService.I.connection.listen((ok) {
+    if (!ok) return;
+
+    const testTopic = 'diag/ping';
+    MqttService.I.subscribe(testTopic);
+
+    StreamSubscription<MqttIncomingMessage>? sub; // khai báo trước
+    sub = MqttService.I.messages.listen((m) {
+      if (m.topic == testTopic) {
+        print('<<< PING RX: ${m.payload}');
+        sub?.cancel(); // nhận được 1 lần là đủ để xác nhận pub/sub OK
+      }
+    });
+
+    final payload = 'hello @ ${DateTime.now().toIso8601String()}';
+    print('>>> PING TX: $payload');
+    MqttService.I.publishString(testTopic, payload);
+  });
+  // --- END: Self-test ping ---
 
   // 3) Cấp cùng MqttService đó cho Store để tránh kết nối lần 2
   runApp(

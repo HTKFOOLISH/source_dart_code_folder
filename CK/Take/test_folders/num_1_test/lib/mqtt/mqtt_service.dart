@@ -1,4 +1,11 @@
-// mqtt_service.dart
+// lib/mqtt/mqtt_service.dart
+// CHANGE: Tương thích version cũ của mqtt_client:
+// - Bỏ websocketPath / websocketProtocols (có thể không tồn tại ở version của bạn)
+// - KHÔNG dùng withKeepAliveFor (một số version không có) -> chỉ set client.keepAlivePeriod
+// - KHÔNG dùng withCleanSession(bool) -> dùng startClean() khi cần cleanSession=true
+// - KHÔNG dùng withWillRetain(bool) -> chỉ gọi withWillRetain() nếu willRetain=true
+// - Re-subscribe thủ công trong onConnected
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -7,6 +14,8 @@ import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
 import 'mqtt_config.dart';
+import 'room_payloads.dart';
+import 'room_topics.dart';
 
 class MqttIncomingMessage {
   final String topic;
@@ -15,7 +24,7 @@ class MqttIncomingMessage {
 }
 
 class MqttService {
-  // Singleton
+  // Singleton để tránh đa kết nối ngoài ý muốn
   static final MqttService I = MqttService._();
   MqttService._();
 
@@ -37,13 +46,15 @@ class MqttService {
 
   /// Kết nối đến broker theo cấu hình; KHÔNG ném exception ra ngoài.
   Future<void> connect(MqttConfig cfg) async {
-    // ✅ Nếu đã kết nối với cùng cấu hình thì bỏ qua
+    // Nếu đã kết nối cùng cấu hình thì thôi
     if (isConnected &&
         _cfg != null &&
         _cfg!.host == cfg.host &&
         _cfg!.port == cfg.port &&
         _cfg!.useTls == cfg.useTls &&
+        _cfg!.transport == cfg.transport &&
         _cfg!.username == cfg.username) {
+      // ignore: avoid_print
       print('[MQTT] already connected to ${cfg.host}:${cfg.port}');
       return;
     }
@@ -54,114 +65,109 @@ class MqttService {
     try {
       _client?.disconnect();
     } catch (_) {}
-    // _client = MqttServerClient.withPort(cfg.host, cfg.clientId, cfg.port);
 
-    final c = _client = MqttServerClient.withPort(
-      cfg.host,
-      cfg.clientId,
-      cfg.port,
-    );
+    // Tạo client mới
+    final c = MqttServerClient.withPort(cfg.host, cfg.clientId, cfg.port);
+    _client = c;
 
-    // dùng MQTT 3.1.1 (v4)
+    // MQTT 3.1.1
     c.setProtocolV311();
 
-    // Nếu dùng cổng 8884 của HiveMQ Cloud ⇒ WebSocket Secure (WSS)
-    if (cfg.port == 8884) {
-      c.useWebSocket = true; // bật WebSocket
-      c.websocketProtocols =
-          MqttClientConstants.protocolsSingleDefault; // ["mqtt"]
-    }
-
-    c.keepAlivePeriod = 30;
+    // Thời gian & keepAlive
+    c.keepAlivePeriod = cfg.keepAliveSec; // CHANGE: chỉ set ở client
     c.autoReconnect = true;
-    c.resubscribeOnAutoReconnect = true;
-    c.connectTimeoutPeriod = 15000; // 15s
-    c.logging(on: true); // Bật log SDK
+    c.connectTimeoutPeriod = 20000; // ms
+    c.logging(on: true);
 
-    // TLS chỉ khi cần
-    c.secure = cfg.useTls;
-    if (cfg.useTls) {
-      c.securityContext = SecurityContext.defaultContext;
-
-      // ⚠️ Chỉ bật khi cần test trên emulator nếu gặp CERTIFICATE_VERIFY_FAILED
-      // c.onBadCertificate = (Object? cert) {
-      //   // ignore: avoid_print
-      //   print('[MQTT] WARNING: accepting bad certificate for ${cfg.host}');
-      //   return true;
-      // };
+    // Transport
+    if (cfg.transport == MqttTransport.websocket) {
+      c.useWebSocket = true;
+      // CHANGE: KHÔNG set websocketPath/websocketProtocols để tránh lỗi version.
+      c.secure = cfg.useTls; // WSS nếu true
+      if (cfg.useTls) {
+        c.securityContext = SecurityContext.defaultContext;
+        // c.onBadCertificate = (_) => true; // ⚠ chỉ bật khi debug nội bộ
+      }
     } else {
-      c.secure = false;
+      // TCP / TLS
+      c.useWebSocket = false;
+      c.secure = cfg.useTls;
+      if (cfg.useTls) {
+        c.securityContext = SecurityContext.defaultContext;
+        // c.onBadCertificate = (_) => true; // ⚠ chỉ bật khi debug nội bộ
+      }
     }
 
     // Callbacks
     c.onConnected = () {
-      print('[MQTT] connected to ${cfg.host}:${cfg.port} (tls=${cfg.useTls})');
+      print('[MQTT] connected');
       _connCtrl.add(true);
-      _restoreSubscriptions(); // ✅ khôi phục các topic đã lưu
+
+      // CHANGE: Re-subscribe thủ công khi vừa kết nối (kể cả autoReconnect)
+      if (_cfg?.resubscribeOnAutoReconnect ?? true) {
+        for (final t in _subscribedTopics) {
+          final res = c.subscribe(t, MqttQos.atLeastOnce);
+          print('[MQTT] resubscribe $t -> $res');
+        }
+      }
     };
 
     c.onDisconnected = () {
-      print('[MQTT] disconnected');
+      print('[MQTT] disconnected: ${c.connectionStatus?.state}');
       _connCtrl.add(false);
     };
+
+    c.pongCallback = () => print('[MQTT] PINGRESP received');
 
     c.onSubscribed = (topic) {
       print('[MQTT] subscribed $topic');
       _subscribedTopics.add(topic);
     };
 
-    // Build connect message (MQTT 3.1.1)
-    final conn = MqttConnectMessage()
-        .withClientIdentifier(cfg.clientId)
-        .startClean()
-        .withWillQos(MqttQos.atLeastOnce);
+    // ===== Build connect message =====
+    var conn = MqttConnectMessage().withClientIdentifier(cfg.clientId);
 
-    if ((cfg.username ?? '').isNotEmpty) {
-      c.connectionMessage = conn.authenticateAs(
-        cfg.username!,
-        cfg.password ?? '',
-      );
-    } else {
-      c.connectionMessage = conn;
+    // CHANGE: Version cũ không hỗ trợ withCleanSession(bool).
+    // Mặc định cleanSession=false. Nếu bạn muốn cleanSession=true -> gọi startClean().
+    if (cfg.cleanSession) {
+      conn = conn.startClean(); // set cleanSession = true
     }
 
-    // Kết nối
+    // Username/Password nếu có
+    if ((cfg.username ?? '').isNotEmpty) {
+      conn = conn.authenticateAs(cfg.username!, cfg.password ?? '');
+    }
+
+    // Last Will nếu có
+    if ((cfg.willTopic ?? '').isNotEmpty) {
+      conn = conn
+          .withWillTopic(cfg.willTopic!)
+          .withWillMessage(cfg.willPayload ?? '')
+          .withWillQos(_qosFromInt(cfg.willQos));
+      // CHANGE: withWillRetain() không có tham số; chỉ gọi khi muốn bật retain
+      if (cfg.willRetain) {
+        conn = conn.withWillRetain();
+      }
+    }
+
+    c.connectionMessage = conn;
+
     print(
-      '[MQTT] connecting to ${cfg.host}:${cfg.port} (tls=${cfg.useTls}) as ${cfg.clientId}',
+      '[MQTT] connecting to ${cfg.host}:${cfg.port} '
+      '(tls=${cfg.useTls}, transport=${cfg.transport.name}) '
+      'as ${cfg.clientId}',
     );
+
     MqttClientConnectionStatus? status;
     try {
-      // final status = await c.connect(); // Future<MqttClientConnectionStatus?>
-      // if (status == null || status.state != MqttConnectionState.connected) {
-      //   // Không ném lỗi ra ngoài; chỉ phát tín hiệu disconnected
-      //   _connCtrl.add(false);
-      //   return;
-      // }
-      // ✅ Timeout 10s (bạn có thể đổi 15s nếu muốn)
-      status = await c.connect().timeout(const Duration(seconds: 10));
-      print(
-        '[MQTT] connect result: state=${c.connectionStatus?.state} '
-        'returnCode=${c.connectionStatus?.returnCode}',
-      );
-    } on TimeoutException {
-      print('[MQTT] connection TIMEOUT');
-      try {
-        c.disconnect();
-      } catch (_) {}
-      _connCtrl.add(false);
-      return;
-    } catch (e, st) {
-      print('[MQTT] connection ERROR: $e');
-      print(st);
-      try {
-        c.disconnect();
-      } catch (_) {}
+      status = await c.connect();
+    } catch (e) {
+      print('[MQTT] connect exception: $e');
       _connCtrl.add(false);
       return;
     }
 
     if (status == null || status.state != MqttConnectionState.connected) {
-      // Không ném lỗi ra ngoài; chỉ phát tín hiệu disconnected
       print(
         '[MQTT] connect failed: ${status?.state} returnCode=${status?.returnCode}',
       );
@@ -170,7 +176,7 @@ class MqttService {
     }
 
     // Lắng nghe inbound
-    c.updates?.listen((events) {
+    c.updates?.listen((List<MqttReceivedMessage<MqttMessage>>? events) {
       if (events == null) return;
       for (final ev in events) {
         final topic = ev.topic;
@@ -179,69 +185,58 @@ class MqttService {
           final payload = MqttPublishPayload.bytesToStringAsString(
             msg.payload.message,
           );
-          // print('[MQTT] < $topic $payload'); // mở nếu cần
           _msgCtrl.add(MqttIncomingMessage(topic, payload));
         }
       }
     });
   }
 
+  // ===== API =====
   Future<void> disconnect() async {
     try {
       _client?.disconnect();
     } catch (_) {}
   }
 
-  // ===== Subscribe / Publish =====
-  void subscribe(String topic, {MqttQos qos = MqttQos.atLeastOnce}) {
-    _subscribedTopics.add(topic);
-    final c = _client;
-    if (c == null || !isConnected) {
-      print('[MQTT] queued subscribe (not connected): $topic');
-      return;
-    }
-    c.subscribe(topic, qos);
-  }
-
-  void unsubscribe(String topic) {
-    _subscribedTopics.remove(topic);
-    final c = _client;
-    if (c == null || !isConnected) return;
-    c.unsubscribe(topic);
-  }
-
-  void publishString(
+  /// CHANGE: QoS và retain có thể cấu hình; mặc định atLeastOnce + không retain.
+  Future<void> publishString(
     String topic,
     String payload, {
     MqttQos qos = MqttQos.atLeastOnce,
     bool retain = false,
-  }) {
-    final c = _client;
-    if (c == null || !isConnected) {
-      print('[MQTT] drop publish (not connected) to $topic');
-      return;
-    }
-    final builder = MqttClientPayloadBuilder();
-    builder.addString(payload);
-    c.publishMessage(topic, qos, builder.payload!, retain: retain);
-    // print('[MQTT] > $topic $payload'); // mở nếu cần
-  }
-
-  void publishJson(
-    String topic,
-    Map<String, dynamic> jsonMap, {
-    MqttQos qos = MqttQos.atLeastOnce,
-    bool retain = false,
-  }) {
-    publishString(topic, jsonEncode(jsonMap), qos: qos, retain: retain);
-  }
-
-  void _restoreSubscriptions() {
+  }) async {
     final c = _client;
     if (c == null || !isConnected) return;
-    for (final t in _subscribedTopics) {
-      c.subscribe(t, MqttQos.atLeastOnce);
-    }
+    final builder = MqttClientPayloadBuilder()..addString(payload);
+    c.publishMessage(topic, qos, builder.payload!, retain: retain);
+  }
+
+  Future<void> publishJson(
+    String topic,
+    Map<String, dynamic> json, {
+    MqttQos qos = MqttQos.atLeastOnce,
+    bool retain = false,
+  }) async {
+    await publishString(topic, jsonEncode(json), qos: qos, retain: retain);
+  }
+
+  void subscribe(String topic, {MqttQos qos = MqttQos.atLeastOnce}) {
+    final c = _client;
+    if (c == null) return;
+    c.subscribe(topic, qos);
+    _subscribedTopics.add(topic);
+  }
+
+  void unsubscribe(String topic) {
+    final c = _client;
+    if (c == null) return;
+    c.unsubscribe(topic);
+    _subscribedTopics.remove(topic);
+  }
+
+  // Tiện ích gửi lệnh cho phòng
+  Future<void> sendRoomCommand(RoomCommand cmd) async {
+    await publishString(RoomTopics.command(cmd.roomId), cmd.encode());
   }
 
   void dispose() {
@@ -254,5 +249,17 @@ class MqttService {
     try {
       _client?.disconnect();
     } catch (_) {}
+  }
+}
+
+MqttQos _qosFromInt(int x) {
+  switch (x) {
+    case 2:
+      return MqttQos.exactlyOnce;
+    case 1:
+      return MqttQos.atLeastOnce;
+    case 0:
+    default:
+      return MqttQos.atMostOnce;
   }
 }

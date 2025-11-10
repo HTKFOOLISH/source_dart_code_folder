@@ -42,9 +42,7 @@ class DevicesViewModel extends ChangeNotifier {
   void bindRoom(String roomId, List<Device> initialUiDevices) {
     _roomId = roomId;
 
-    // ✅ RẤT QUAN TRỌNG: tạo bản sao, tránh alias list
-    final copy = List<Device>.from(initialUiDevices);
-
+    // CHANGE: bỏ biến copy thừa để tránh cảnh báo "unused local variable".
     _devices
       ..clear()
       ..addAll(initialUiDevices);
@@ -87,7 +85,8 @@ class DevicesViewModel extends ChangeNotifier {
     if (_roomId == null) return;
     final rid = _roomId!;
     final id = _slug(d.name);
-    store.setDeviceOn(rid, id, d.isOn);
+    // CHANGE: dùng API mới của store
+    store.setDevice(rid, id, d.isOn);
   }
 
   /// API mà UI hiện tại đang gọi trong living_room.dart:
@@ -101,7 +100,8 @@ class DevicesViewModel extends ChangeNotifier {
     if (_roomId == null) return;
     final rid = _roomId!;
     final id = _slug(d.name);
-    store.setDeviceOn(rid, id, value);
+    // CHANGE: dùng API mới của store
+    store.setDevice(rid, id, value);
   }
 
   @override

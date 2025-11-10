@@ -1,10 +1,13 @@
-// Store runtime theo phòng (để UI cập nhật tự động)
+// lib/state/mqtt_room_store.dart
+// CHANGE: Subscribe thêm wildcardCommand và xử lý message /command (mirror)
+// để khi bạn gửi lệnh từ Web Client, UI cũng đổi theo.
+
 import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
-import '../mqtt/room_topics.dart';
-import '../mqtt/room_payloads.dart';
-import '../mqtt/mqtt_service.dart';
+import 'package:num_1_test/mqtt/room_topics.dart';
+import 'package:num_1_test/mqtt/room_payloads.dart';
+import 'package:num_1_test/mqtt/mqtt_service.dart';
 
 class RoomRuntimeState {
   final String roomId;
@@ -16,39 +19,20 @@ class RoomRuntimeState {
     required this.roomId,
     Map<String, bool>? deviceOn,
     Map<String, num>? sensors,
-    int? ts,
-  }) : deviceOn = Map.of(deviceOn ?? const {}),
-       sensors = Map.of(sensors ?? const {}),
-       ts = ts ?? DateTime.now().millisecondsSinceEpoch;
+    this.ts = 0,
+  }) : deviceOn = deviceOn ?? <String, bool>{},
+       sensors = sensors ?? <String, num>{};
 
-  RoomRuntimeState copyWith({
-    Map<String, bool>? deviceOn,
-    Map<String, num>? sensors,
-    int? ts,
-  }) {
-    return RoomRuntimeState(
-      roomId: roomId,
-      deviceOn: deviceOn ?? this.deviceOn,
-      sensors: sensors ?? this.sensors,
-      ts: ts ?? this.ts,
-    );
-  }
-
-  void applyPacket(RoomPacket p) {
-    if (p.roomId != roomId) return;
-    deviceOn
-      ..clear()
-      ..addEntries(p.devices.map((d) => MapEntry(d.id, d.on)));
-    sensors
-      ..clear()
-      ..addEntries(p.sensors.map((s) => MapEntry(s.id, s.value)));
-    ts = p.ts;
-  }
+  RoomRuntimeState copy() => RoomRuntimeState(
+    roomId: roomId,
+    deviceOn: Map<String, bool>.from(deviceOn),
+    sensors: Map<String, num>.from(sensors),
+    ts: ts,
+  );
 }
 
 class MqttRoomStore extends ChangeNotifier {
-  /// Luôn dùng cùng một MqttService (truyền từ ngoài hoặc fallback singleton)
-  final MqttService _svc; // thêm field
+  final MqttService _svc;
 
   final Map<String, RoomRuntimeState> _rooms = {};
   late final StreamSubscription _msgSub;
@@ -60,63 +44,67 @@ class MqttRoomStore extends ChangeNotifier {
   RoomRuntimeState room(String roomId) =>
       _rooms.putIfAbsent(roomId, () => RoomRuntimeState(roomId: roomId));
 
-  /// ✅ Chỉ một constructor. Nhận `service` tuỳ chọn để tránh double-connect.
-  /// Không tự connect ở đây; connect được gọi ở `main.dart` trước đó.
-  MqttRoomStore({MqttService? service}) : _svc = service ?? MqttService.I {
-    // DEBUG
-    // ignore: avoid_print
-    print('[MqttRoomStore] instance = ${identityHashCode(this)}');
-
-    // Lắng nghe message từ service
+  MqttRoomStore({required MqttService service}) : _svc = service {
+    // Lắng nghe message
     _msgSub = _svc.messages.listen(_onMessage);
 
-    // Khi kết nối thành công, subscribe wildcard 1 lần
-    _connSub = _svc.connection.listen((connected) {
-      if (connected) {
-        // Subscribe wildcard snapshot
+    // Khi kết nối thành công thì (re)subscribe wildcard
+    _connSub = _svc.connection.listen((ok) {
+      if (ok) {
         _svc.subscribe(RoomTopics.wildcardSnapshot());
+        _svc.subscribe(RoomTopics.wildcardCommand()); // CHANGE: mirror command
       }
     });
   }
 
   void _onMessage(MqttIncomingMessage m) {
-    // Chỉ xử lý các topic snapshot (ví dụ: rooms/<roomId>/snapshot)
-    // final snapPrefix = 'rooms/';
-    if (!m.topic.contains('/snapshot')) return;
-
     try {
-      final pkt = RoomPacket.parse(m.payload);
-      final st = room(pkt.roomId);
-      st.applyPacket(pkt);
-      _rooms[pkt.roomId] = st;
-      notifyListeners();
+      // SNAPSHOT: nguồn chân lý
+      if (m.topic.endsWith('/snapshot')) {
+        final pkt = RoomPacket.parse(m.payload);
+        final cur = room(pkt.roomId).copy();
+        for (final d in pkt.devices) {
+          cur.deviceOn[d.id] = d.on;
+        }
+        for (final s in pkt.sensors) {
+          cur.sensors[s.id] = s.value;
+        }
+        cur.ts = pkt.ts;
+        _rooms[pkt.roomId] = cur;
+        notifyListeners();
+        return;
+      }
+
+      // CHANGE: COMMAND (mirror) — chỉ để tiện test khi chưa có edge
+      if (m.topic.endsWith('/command')) {
+        final cmd = RoomCommand.parse(m.payload);
+        final cur = room(cmd.roomId).copy();
+        for (final d in cmd.devices) {
+          cur.deviceOn[d.id] = d.on;
+        }
+        // mark local time vì command không nhất thiết có ts dùng cho state
+        cur.ts = DateTime.now().millisecondsSinceEpoch;
+        _rooms[cmd.roomId] = cur;
+        notifyListeners();
+        return;
+      }
     } catch (e) {
-      // ignore lỗi parse
-      print('LỖI PARSE RoomPacket TỪ MQTT: $e');
+      debugPrint('[MqttRoomStore] parse error: $e');
     }
   }
 
-  /// App muốn bật/tắt 1 device trong phòng
-  void setDeviceOn(String roomId, String deviceId, bool on) {
-    final cur = room(roomId);
-    cur.deviceOn[deviceId] = on;
-
-    // Gửi lệnh command (giữ nguyên các thiết bị khác ở trạng thái hiện tại)
-    final pkt = RoomPacket(
+  /// Thao tác bật/tắt 1 thiết bị trong 1 phòng.
+  Future<void> setDevice(String roomId, String deviceId, bool on) async {
+    final cmd = RoomCommand(
       roomId: roomId,
-      devices: cur.deviceOn.entries
-          .map((e) => DeviceStateDto(id: e.key, on: e.value))
-          .toList(),
-      sensors: cur.sensors.entries
-          .map((e) => SensorDto(id: e.key, value: e.value))
-          .toList(),
-      ts: DateTime.now().millisecondsSinceEpoch,
+      devices: [DeviceStateDto(id: deviceId, on: on)],
     );
-
-    // ✅ Dùng đúng instance _svc (không gọi trực tiếp singleton)
-    _svc.publishString(RoomTopics.command(roomId), pkt.encode());
+    await _svc.sendRoomCommand(cmd);
 
     // Cập nhật local ngay để UI phản hồi mượt
+    final cur = room(roomId).copy();
+    cur.deviceOn[deviceId] = on;
+    cur.ts = DateTime.now().millisecondsSinceEpoch;
     _rooms[roomId] = cur;
     notifyListeners();
   }
