@@ -51,10 +51,21 @@ class MqttRoomStore extends ChangeNotifier {
     // Khi kết nối thành công thì (re)subscribe wildcard
     _connSub = _svc.connection.listen((ok) {
       if (ok) {
-        _svc.subscribe(RoomTopics.wildcardSnapshot());
-        _svc.subscribe(RoomTopics.wildcardCommand()); // CHANGE: mirror command
+        // _svc.subscribe(RoomTopics.wildcardSnapshot());
+        // _svc.subscribe(RoomTopics.wildcardCommand()); // CHANGE: mirror command
+        _subscribeAll();
       }
     });
+
+    // 🔥 FIX: nếu tại thời điểm tạo store mà MQTT đã kết nối rồi thì subscribe luôn
+    if (_svc.isConnected) {
+      _subscribeAll();
+    }
+  }
+
+  void _subscribeAll() {
+    _svc.subscribe(RoomTopics.wildcardSnapshot());
+    _svc.subscribe(RoomTopics.wildcardCommand());
   }
 
   void _onMessage(MqttIncomingMessage m) {
