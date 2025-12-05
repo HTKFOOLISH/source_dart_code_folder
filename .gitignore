@@ -1,0 +1,81 @@
+# # .vscode at test folder
+# # CK/Take/test_folders
+
+# # test file
+# test.dart
+
+# # git file
+# .gitignore
+# .git
+
+# # another folder
+# myLearning/
+# CK/Take/bug_home_electra
+# CK/Take/test_folders/Flutter-Smart-Home-App
+
+# # folder is built from vscode and it's lib like .idea and .vscode folder, ...
+# *.idea/  
+# *.vscode
+# devtools_options.yaml
+
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder
+.vscode/
+*.code-workspace
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Flutter.xcconfig
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# Exceptions to above rules.
+!/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+!/dev/ci/**/packages.sh
+
+# Test and development files
+test.dart
+*.test.dart
+
+# Custom folders
+myLearning/
+CK/Take/bug_home_electra
+CK/Take/test_folders/Flutter-Smart-Home-App
+
+# Build and output
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+
+# Platform-specific build directories
+**/android/app/debug/
+**/android/app/release/
+**/ios/Pods/
+**/ios/Podfile.lock
+**/web/
+
+# Development tools options
+devtools_options.yaml
