@@ -1,9 +1,6 @@
 // living_room.dart
 
 import 'dart:convert';
-import 'dart:async'; // <-- THÊM VÀO
-import 'dart:math'; // <-- THÊM VÀO
-
 import 'package:flutter/material.dart';
 import 'package:num_1_test/state/mqtt_room_store.dart';
 import 'package:num_1_test/ui/widgets/show_icon_options.dart';
@@ -12,6 +9,18 @@ import 'package:num_1_test/models/room.dart';
 import 'package:num_1_test/ui/devices_screen/devices_view_model.dart';
 import 'package:num_1_test/ui/devices_screen/devices_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// Helper: tạo id ngắn từ tên thiết bị (giống bên devices_view_model.dart)
+String _slug(String name) {
+  final s = name
+      .toLowerCase()
+      .replaceAll(
+        RegExp(r'[^a-z0-9]+'),
+        '-',
+      ) // thay khoảng trắng, ký tự lạ bằng '-'
+      .replaceAll(RegExp(r'(^-+|-+$)'), ''); // bỏ '-' ở đầu/cuối
+  return s.isEmpty ? 'device' : s;
+}
 
 class LivingRoomRoomArgs extends StatelessWidget {
   const LivingRoomRoomArgs({super.key});
@@ -387,13 +396,11 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
               .toList();
           print('[devices] loaded ${devices.length} items'); // <— log
         } else {
-          // ignore: avoid_print
-          print('[devices] data is not a List; will seed defaults'); // <— log
+          print('[devices] data is not a List; will seed defaults');
         }
       }
     } catch (e) {
-      // ignore: avoid_print
-      print('[devices] parse error: $e — will seed defaults'); // <— log
+      print('[devices] parse error: $e — will seed defaults');
     }
 
     // Nếu chưa có hoặc rỗng → seed theo tên phòng
@@ -401,9 +408,7 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
       final defaults = _defaultDevicesForRoom(widget.roomName);
       devices = defaults;
       await _saveDevices(defaults);
-      print(
-        '[devices] seeded ${defaults.length} items for ${widget.roomName}',
-      ); // <— log
+      print('[devices] seeded ${defaults.length} items for ${widget.roomName}');
     }
 
     if (!mounted) return;
@@ -416,14 +421,43 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
 
     print('[devices] viewModel set + bindRoom done'); // <— log
 
-    // Hardcode sensor giả + publish snapshot lên MQTT
+    // Lấy store
     final store = Provider.of<MqttRoomStore>(context, listen: false);
 
-    final fakeSensors = <String, num>{'temp': 26.5, 'hum': 58};
+    // 1) Load sensors đã lưu (nếu có) cho room này
+    await store.loadSensorsFromPrefs(widget.roomId);
 
-    await store.setSensorsAndPublish(widget.roomId, fakeSensors);
-    // ignore: avoid_print
-    print('[sensors] initial fake sensors sent for room ${widget.roomId}');
+    // 2) Sau khi load xong, lấy runtimeState hiện tại
+    final runtimeState = store.room(widget.roomId);
+
+    // 3) CHỈ seed sensor nếu hiện tại *chưa có* sensor nào trong store
+    if (runtimeState.sensors.isEmpty) {
+      // build trạng thái device cho store (id: slug(name))
+      final deviceStates = <String, bool>{};
+      for (final d in devices) {
+        final id = _slug(d.name);
+        deviceStates[id] = d.isOn;
+      }
+
+      // Hardcode sensor giả + publish snapshot lên MQTT
+      final fakeSensors = <String, num>{'temp': 26.5, 'hum': 58};
+
+      await store.setSensorsAndPublish(
+        widget.roomId,
+        deviceStates,
+        fakeSensors,
+      );
+
+      print(
+        '[sensors] seeded fake sensors for room ${widget.roomId} (first time only)',
+      );
+    } else {
+      // 4) ĐÃ có sensor (từ prefs hoặc từ MQTT) -> publish lại snapshot hiện tại
+      await store.publishCurrentSnapshot(widget.roomId);
+      print(
+        '[sensors] room ${widget.roomId} already has sensors, republish current snapshot',
+      );
+    }
   }
 
   Future<void> _saveDevices(List<Device> devices) async {

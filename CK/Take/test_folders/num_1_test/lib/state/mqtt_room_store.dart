@@ -2,6 +2,8 @@
 // CHANGE: Subscribe thêm wildcardCommand và xử lý message /command (mirror)
 // để khi bạn gửi lệnh từ Web Client, UI cũng đổi theo.
 
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
@@ -38,6 +40,41 @@ class MqttRoomStore extends ChangeNotifier {
   late final StreamSubscription _msgSub;
   late final StreamSubscription _connSub;
 
+  // ====== PERSIST SENSORS TO SHARED PREFERENCES ======
+
+  static String _sensorsPrefKey(String roomId) => 'room_sensors_$roomId';
+
+  Future<void> _saveSensorsToPrefs(String roomId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final state = room(roomId);
+    final map = <String, num>{};
+    state.sensors.forEach((k, v) => map[k] = v);
+    final jsonStr = jsonEncode(map);
+    await prefs.setString(_sensorsPrefKey(roomId), jsonStr);
+  }
+
+  Future<void> loadSensorsFromPrefs(String roomId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonStr = prefs.getString(_sensorsPrefKey(roomId));
+    if (jsonStr == null || jsonStr.trim().isEmpty) return;
+
+    try {
+      final decoded = jsonDecode(jsonStr);
+      if (decoded is Map<String, dynamic>) {
+        final cur = room(roomId).copy();
+        decoded.forEach((key, value) {
+          if (value is num) {
+            cur.sensors[key] = value;
+          }
+        });
+        _rooms[roomId] = cur;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('[MqttRoomStore] loadSensorsFromPrefs error: $e');
+    }
+  }
+
   UnmodifiableMapView<String, RoomRuntimeState> get rooms =>
       UnmodifiableMapView(_rooms);
 
@@ -70,19 +107,29 @@ class MqttRoomStore extends ChangeNotifier {
 
   void _onMessage(MqttIncomingMessage m) {
     try {
-      // SNAPSHOT: nguồn chân lý
+      // SNAPSHOT: chỉ dùng để sync sensor (KHÔNG đụng tới deviceOn)
       if (m.topic.endsWith('/snapshot')) {
         final pkt = RoomPacket.parse(m.payload);
         final cur = room(pkt.roomId).copy();
-        for (final d in pkt.devices) {
-          cur.deviceOn[d.id] = d.on;
-        }
+
+        // KHÔNG ghi đè trạng thái device ở đây nữa
+        // for (final d in pkt.devices) {
+        //   cur.deviceOn[d.id] = d.on;
+        // }
+
+        // Sensor: luôn lấy giá trị mới nhất từ snapshot
         for (final s in pkt.sensors) {
           cur.sensors[s.id] = s.value;
         }
+
         cur.ts = pkt.ts;
         _rooms[pkt.roomId] = cur;
         notifyListeners();
+
+        // Lưu sensors mới nhất xuống SharedPreferences
+        // ignore: unawaited_futures
+        _saveSensorsToPrefs(pkt.roomId);
+
         return;
       }
 
@@ -121,18 +168,31 @@ class MqttRoomStore extends ChangeNotifier {
   }
 
   /// Set (hoặc cập nhật) toàn bộ sensors cho 1 phòng và publish snapshot lên MQTT.
+  /// Set (hoặc cập nhật) toàn bộ sensors cho 1 phòng và publish snapshot lên MQTT.
   Future<void> setSensorsAndPublish(
     String roomId,
+    Map<String, bool> devicesOn,
     Map<String, num> sensors,
   ) async {
     // 1) Cập nhật local store
     final cur = room(roomId).copy();
-    sensors.forEach((key, value) {
-      cur.sensors[key] = value;
-    });
+
+    // Ghi đè toàn bộ state thiết bị
+    cur.deviceOn
+      ..clear()
+      ..addAll(devicesOn);
+
+    // Ghi đè toàn bộ state sensor
+    cur.sensors
+      ..clear()
+      ..addAll(sensors);
+
     cur.ts = DateTime.now().millisecondsSinceEpoch;
     _rooms[roomId] = cur;
     notifyListeners();
+
+    // 1b) Lưu sensors xuống SharedPreferences
+    await _saveSensorsToPrefs(roomId);
 
     // 2) Build RoomPacket từ state hiện tại (devices + sensors)
     final pkt = RoomPacket(
@@ -147,6 +207,24 @@ class MqttRoomStore extends ChangeNotifier {
     );
 
     // 3) Publish snapshot lên broker
+    await _svc.sendRoomSnapshot(pkt);
+  }
+
+  /// Publish lại snapshot hiện tại của 1 room (không thay đổi state).
+  Future<void> publishCurrentSnapshot(String roomId) async {
+    final cur = room(roomId); // dùng state hiện tại
+
+    final pkt = RoomPacket(
+      roomId: roomId,
+      devices: cur.deviceOn.entries
+          .map((e) => DeviceStateDto(id: e.key, on: e.value))
+          .toList(),
+      sensors: cur.sensors.entries
+          .map((e) => SensorDto(id: e.key, value: e.value))
+          .toList(),
+      ts: DateTime.now().millisecondsSinceEpoch,
+    );
+
     await _svc.sendRoomSnapshot(pkt);
   }
 
