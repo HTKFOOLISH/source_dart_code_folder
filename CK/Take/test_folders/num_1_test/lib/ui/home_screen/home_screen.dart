@@ -62,6 +62,13 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     final rooms = context.watch<RoomProvider>().rooms;
 
+    final width = MediaQuery.of(context).size.width;
+    // đơn giản: 2 cột trên mobile nhỏ, 3 cột trên màn hình rộng hơn
+    final int crossAxisCount = width < 700 ? 2 : 3;
+
+    // childAspectRatio tinh theo width: nếu màn hình hẹp -> chiều cao lớn hơn (tile dài hơn)
+    final double childAspectRatio = width < 700 ? 0.8 : 1.05;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Rooms'),
@@ -94,9 +101,9 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 GridView.builder(
                   padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.9,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    childAspectRatio: childAspectRatio,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),

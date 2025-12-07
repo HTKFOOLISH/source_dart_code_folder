@@ -70,14 +70,14 @@ class _RoomCardState extends State<RoomCard> {
         widget.onDoubleTap?.call();
 
         Future.delayed(const Duration(milliseconds: 300), () {
-          if (mounted) { // Thêm kiểm tra 'mounted' cho an toàn
+          if (mounted) {
+            // Thêm kiểm tra 'mounted' cho an toàn
             setState(() {
               isPress = false;
               // state = !state; // <-- [ĐÃ XOÁ] Không tự thay đổi state ở đây
             });
           }
         });
-
       },
 
       onTap: widget.onTap,
@@ -106,8 +106,8 @@ class _RoomCardState extends State<RoomCard> {
                 ),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+            Wrap(
+              alignment: WrapAlignment.spaceAround,
               children: [
                 Text(
                   'Devices: ${widget.deviceCount}', // Lấy từ widget
@@ -117,6 +117,7 @@ class _RoomCardState extends State<RoomCard> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                const SizedBox(width: 5),
                 Text(
                   state
                       ? 'Activate'

@@ -55,8 +55,7 @@ class _ShowIconOptionsState extends State<ShowIconOptions> {
       await prefs.remove('password'); // xoá key password
 
       // Quay lại màn hình login
-      Navigator.pushNamedAndRemoveUntil(
-          context, AppRoutes.login, (_) => false);
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
 
       // Hiển thị dòng chữ thông báo đăng xuất thành công
       ScaffoldMessenger.of(context).showSnackBar(
