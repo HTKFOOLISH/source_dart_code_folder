@@ -239,6 +239,11 @@ class MqttService {
     await publishString(RoomTopics.command(cmd.roomId), cmd.encode());
   }
 
+  // Tiện ích gửi snapshot trạng thái phòng
+  Future<void> sendRoomSnapshot(RoomPacket pkt) async {
+    await publishString(RoomTopics.snapshot(pkt.roomId), pkt.encode());
+  }
+
   void dispose() {
     try {
       _msgCtrl.close();

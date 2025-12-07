@@ -47,7 +47,7 @@ class RoomPacket {
     sensors: (j['sensors'] as List<dynamic>? ?? [])
         .map((e) => SensorDto.fromJson(e as Map<String, dynamic>))
         .toList(),
-    ts: (j['ts'] as num).toInt(),
+    ts: (j['ts'] as num?)?.toInt() ?? DateTime.now().millisecondsSinceEpoch,
   );
 
   Map<String, dynamic> toJson() => {

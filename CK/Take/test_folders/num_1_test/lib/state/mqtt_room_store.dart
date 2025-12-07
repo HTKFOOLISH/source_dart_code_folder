@@ -120,6 +120,36 @@ class MqttRoomStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Set (hoặc cập nhật) toàn bộ sensors cho 1 phòng và publish snapshot lên MQTT.
+  Future<void> setSensorsAndPublish(
+    String roomId,
+    Map<String, num> sensors,
+  ) async {
+    // 1) Cập nhật local store
+    final cur = room(roomId).copy();
+    sensors.forEach((key, value) {
+      cur.sensors[key] = value;
+    });
+    cur.ts = DateTime.now().millisecondsSinceEpoch;
+    _rooms[roomId] = cur;
+    notifyListeners();
+
+    // 2) Build RoomPacket từ state hiện tại (devices + sensors)
+    final pkt = RoomPacket(
+      roomId: roomId,
+      devices: cur.deviceOn.entries
+          .map((e) => DeviceStateDto(id: e.key, on: e.value))
+          .toList(),
+      sensors: cur.sensors.entries
+          .map((e) => SensorDto(id: e.key, value: e.value))
+          .toList(),
+      ts: cur.ts,
+    );
+
+    // 3) Publish snapshot lên broker
+    await _svc.sendRoomSnapshot(pkt);
+  }
+
   @override
   void dispose() {
     _msgSub.cancel();

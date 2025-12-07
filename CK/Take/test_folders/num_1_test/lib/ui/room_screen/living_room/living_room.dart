@@ -122,13 +122,6 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
   bool isOnTap = false;
   int count = 0;
 
-  // ##### PHẦN THÊM MỚI (SENSOR) #####
-  double _temperature = 25.0;
-  int _humidity = 60;
-  final Random _random = Random();
-  Timer? _sensorTimer;
-  // ##### KẾT THÚC PHẦN THÊM MỚI #####
-
   // Trả về 4 thiết bị mặc định tùy loại phòng.
   // Đổi pathImageName theo assets bạn đang có (png + _on.gif).
   String _roomTypeFromName(String roomName) {
@@ -355,15 +348,6 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
       // await prefs.remove(_storageKey());
       _loadDevices();
     });
-
-    // ##### PHẦN THÊM MỚI (SENSOR) #####
-    // Khởi tạo giá trị ban đầu
-    _generateSensorData();
-    // Bắt đầu timer cập nhật sensor mỗi 3 giây
-    _sensorTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      _generateSensorData();
-    });
-    // ##### KẾT THÚC PHẦN THÊM MỚI #####
   }
 
   String _storageKey() {
@@ -378,26 +362,6 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
         .replaceAll(RegExp(r'^-+|-+$'), '');
     return 'devices_${slug.isEmpty ? 'room' : slug}';
   }
-
-  // ##### PHẦN THÊM MỚI (SENSOR) #####
-  @override
-  void dispose() {
-    _sensorTimer?.cancel(); // Huỷ timer khi widget bị huỷ
-    super.dispose();
-  }
-
-  void _generateSensorData() {
-    if (!mounted) return; // Kiểm tra nếu widget còn tồn tại
-    setState(() {
-      // Tạo dao động nhỏ quanh giá trị hiện tại
-      _temperature += _random.nextDouble() * 0.4 - 0.2; // +/- 0.2
-      _temperature = _temperature.clamp(20.0, 35.0); // Giữ trong khoảng 20-35
-
-      _humidity += _random.nextInt(5) - 2; // +/- 2
-      _humidity = _humidity.clamp(40, 80); // Giữ trong khoảng 40-80
-    });
-  }
-  // ##### KẾT THÚC PHẦN THÊM MỚI #####
 
   Future<void> _loadDevices() async {
     final prefs = await SharedPreferences.getInstance();
@@ -451,6 +415,15 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
     viewModel.bindRoom(widget.roomId, List<Device>.from(viewModel.device));
 
     print('[devices] viewModel set + bindRoom done'); // <— log
+
+    // Hardcode sensor giả + publish snapshot lên MQTT
+    final store = Provider.of<MqttRoomStore>(context, listen: false);
+
+    final fakeSensors = <String, num>{'temp': 26.5, 'hum': 58};
+
+    await store.setSensorsAndPublish(widget.roomId, fakeSensors);
+    // ignore: avoid_print
+    print('[sensors] initial fake sensors sent for room ${widget.roomId}');
   }
 
   Future<void> _saveDevices(List<Device> devices) async {
@@ -473,32 +446,49 @@ class _LivingRoomBodyScreenState extends State<LivingRoomBodyScreen> {
         DeviceInfo(indexCounter: count),
 
         // ##### PHẦN THÊM MỚI (SENSOR) #####
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: _SensorCard(
-                  icon: Icons.thermostat,
-                  label: 'Temperature',
-                  value:
-                      '${_temperature.toStringAsFixed(1)} °C', // Format 1 chữ số thập phân
-                  iconColor: Colors.redAccent,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _SensorCard(
-                  icon: Icons.water_drop_outlined,
-                  label: 'Humidity',
-                  value: '$_humidity %',
-                  iconColor: Colors.blueAccent,
-                ),
-              ),
-            ],
-          ),
-        ),
+        // ***** SENSOR: đọc từ MqttRoomStore *****
+        Consumer<MqttRoomStore>(
+          builder: (context, store, _) {
+            final state = store.room(widget.roomId);
 
+            final num? temp = state.sensors['temp'];
+            final num? hum = state.sensors['hum'];
+
+            final tempText = temp != null
+                ? '${temp.toStringAsFixed(1)} °C'
+                : '--';
+            final humText = hum != null ? '${hum.toStringAsFixed(0)} %' : '--';
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _SensorCard(
+                      icon: Icons.thermostat,
+                      label: 'Temperature',
+                      value: tempText,
+                      iconColor: Colors.redAccent,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _SensorCard(
+                      icon: Icons.water_drop_outlined,
+                      label: 'Humidity',
+                      value: humText,
+                      iconColor: Colors.blueAccent,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        // ***** HẾT SENSOR *****
         // ##### KẾT THÚC PHẦN THÊM MỚI #####
         Padding(
           padding: const EdgeInsets.fromLTRB(
