@@ -50,12 +50,20 @@ class RoomPacket {
     ts: (j['ts'] as num?)?.toInt() ?? DateTime.now().millisecondsSinceEpoch,
   );
 
-  Map<String, dynamic> toJson() => {
-    'roomId': roomId,
-    'devices': devices.map((e) => e.toJson()).toList(),
-    'sensors': sensors.map((e) => e.toJson()).toList(),
-    'ts': ts,
-  };
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'roomId': roomId,
+      'sensors': sensors.map((e) => e.toJson()).toList(),
+      'ts': ts,
+    };
+
+    // Chỉ thêm "devices" nếu có phần tử
+    if (devices.isNotEmpty) {
+      map['devices'] = devices.map((e) => e.toJson()).toList();
+    }
+
+    return map;
+  }
 
   static RoomPacket parse(String s) =>
       RoomPacket.fromJson(jsonDecode(s) as Map<String, dynamic>);

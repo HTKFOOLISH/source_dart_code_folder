@@ -197,9 +197,7 @@ class MqttRoomStore extends ChangeNotifier {
     // 2) Build RoomPacket từ state hiện tại (devices + sensors)
     final pkt = RoomPacket(
       roomId: roomId,
-      devices: cur.deviceOn.entries
-          .map((e) => DeviceStateDto(id: e.key, on: e.value))
-          .toList(),
+      devices: const <DeviceStateDto>[], // KHÔNG gửi device trong snapshot
       sensors: cur.sensors.entries
           .map((e) => SensorDto(id: e.key, value: e.value))
           .toList(),
@@ -216,9 +214,8 @@ class MqttRoomStore extends ChangeNotifier {
 
     final pkt = RoomPacket(
       roomId: roomId,
-      devices: cur.deviceOn.entries
-          .map((e) => DeviceStateDto(id: e.key, on: e.value))
-          .toList(),
+      // Snapshot KHÔNG gửi device nữa
+      devices: const <DeviceStateDto>[],
       sensors: cur.sensors.entries
           .map((e) => SensorDto(id: e.key, value: e.value))
           .toList(),
