@@ -160,21 +160,32 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // LOGO
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: const [
-                  Image(image: AssetImage('assets/images/bug.png')),
-                  Image(image: AssetImage('assets/images/smart-house.png')),
-                ],
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.25,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.2,
+                      child: Image(image: AssetImage('assets/images/bug.png')),
+                    ),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.2,
+                      child: Image(
+                        image: AssetImage('assets/images/smart-house.png'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               // TITLE
-              const Text(
+              Text(
                 'BUG HOME',
                 style: TextStyle(
-                  fontSize: 72,
+                  fontSize: MediaQuery.of(context).size.width * 0.15, // fit th
                   fontWeight: FontWeight.bold,
-                  height: 3.0,
+                  height: MediaQuery.of(context).size.height * 0.003,
                 ),
               ),
 
@@ -215,8 +226,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // USERNAME
               SizedBox(
-                width: 350,
-                height: 100, // tăng nhẹ để đủ chỗ hiển thị error
+                width: MediaQuery.of(context).size.width * 0.85,
+                height: MediaQuery.of(context).size.height * 0.12,
                 child: TextField(
                   focusNode: _usernameFocus,
                   controller: _usernameController,
@@ -278,8 +289,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // PASSWORD
               SizedBox(
-                width: 350,
-                height: 100,
+                width: MediaQuery.of(context).size.width * 0.85,
+                height: MediaQuery.of(context).size.height * 0.12,
                 child: TextField(
                   focusNode: _passwordFocus,
                   controller: _passwordController,
@@ -364,8 +375,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // SIGN IN BUTTON (luôn bấm được)
               SizedBox(
-                height: 90,
-                width: 350,
+                height: MediaQuery.of(context).size.height * 0.12,
+                width: MediaQuery.of(context).size.width * 0.85,
                 child: ElevatedButton(
                   onPressed: () => _handleSubmit(), // GỌI hàm thật sự
                   child: const Text(
